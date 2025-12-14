@@ -34,6 +34,13 @@
       </section>
 
       <!-- Expandable Sections -->
+      <!-- 
+        Graph Reference System:
+        - Add data-graph-ref="refid" to create a reference ID for a node
+        - Mention the refid in any other node's text to auto-create links
+        - Example: data-graph-ref="kyo" on a project, then mention "kyo" in a talk title
+        - Reference links appear as dotted gold lines connecting related nodes
+      -->
       <nav class="sections" role="navigation" aria-label="Site sections">
         
         <!-- Work Section -->
@@ -97,31 +104,31 @@
               <p class="section-subtitle">Contributing to the commons</p>
               
               <div class="project-grid">
-                <a href="#" class="project-card" data-graph-id="oss-project-name" data-graph-label="Project Name" data-graph-subtitle="Open source contribution">
+                <a href="#" class="project-card" data-graph-id="oss-kyo" data-graph-ref="kyo" data-graph-label="Kyo" data-graph-subtitle="Functional effects for Scala">
                   <span class="project-icon">
                     <svg width="10" height="10" viewBox="0 0 12 12" fill="currentColor"><polygon points="6,0 12,11 0,11"/></svg>
                   </span>
-                  <h3 class="project-name">Project Name</h3>
-                  <p class="project-desc">Brief description of your open source contribution or maintained project.</p>
+                  <h3 class="project-name">Kyo</h3>
+                  <p class="project-desc">A novel functional effects system for Scala, focused on simplicity and performance.</p>
                   <span class="project-link">View on GitHub ↗</span>
                 </a>
                 
-                <a href="#" class="project-card" data-graph-id="oss-another" data-graph-label="Another Project" data-graph-subtitle="Another open source project">
+                <a href="#" class="project-card" data-graph-id="oss-another" data-graph-ref="streams" data-graph-label="Stream Lib" data-graph-subtitle="Algebraic stream processing">
                   <span class="project-icon">
                     <svg width="10" height="10" viewBox="0 0 12 12" fill="currentColor"><polygon points="6,0 12,11 0,11"/></svg>
                   </span>
-                  <h3 class="project-name">Another Project</h3>
-                  <p class="project-desc">Another open source project you've contributed to or created.</p>
+                  <h3 class="project-name">Stream Lib</h3>
+                  <p class="project-desc">Algebraic effects for stream composition and processing.</p>
                   <span class="project-link">View on GitHub ↗</span>
                 </a>
                 
-                <a href="#" class="project-card" data-graph-id="oss-contribution" data-graph-label="Contribution" data-graph-subtitle="Significant contribution">
+                <a href="#" class="project-card" data-graph-id="oss-contribution" data-graph-ref="scala" data-graph-label="Scala Contributions" data-graph-subtitle="Various Scala ecosystem">
                   <span class="project-icon">
                     <svg width="10" height="10" viewBox="0 0 12 12" fill="currentColor"><polygon points="6,0 12,11 0,11"/></svg>
                   </span>
-                  <h3 class="project-name">Contribution</h3>
-                  <p class="project-desc">A significant contribution to an existing open source project.</p>
-                  <span class="project-link">View PR ↗</span>
+                  <h3 class="project-name">Scala Contributions</h3>
+                  <p class="project-desc">Contributions to various Scala ecosystem projects.</p>
+                  <span class="project-link">View PRs ↗</span>
                 </a>
               </div>
             </div>
