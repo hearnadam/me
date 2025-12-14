@@ -4,23 +4,301 @@
  */
 
 // ============================================
+// Sound & Haptic Feedback System
+// ============================================
+
+class AudioFeedback {
+  constructor() {
+    this.context = null;
+    this.enabled = true;
+    this.muted = false; // New muted state
+    this.gainNode = null;
+    this.masterVolume = 0.15; // Subtle volume
+    this.init();
+  }
+
+  init() {
+    try {
+      // Lazy initialization - only create when first used
+      this.context = null;
+      
+      // Load muted state from localStorage
+      const savedMuteState = localStorage.getItem('soundMuted');
+      if (savedMuteState !== null) {
+        this.muted = savedMuteState === 'true';
+      }
+    } catch (e) {
+      console.log('Web Audio API not supported');
+      this.enabled = false;
+    }
+  }
+
+  ensureContext() {
+    if (!this.enabled || this.muted) return false;
+    
+    if (!this.context) {
+      try {
+        this.context = new (window.AudioContext || window.webkitAudioContext)();
+        this.gainNode = this.context.createGain();
+        this.gainNode.connect(this.context.destination);
+        this.gainNode.gain.value = this.masterVolume;
+      } catch (e) {
+        this.enabled = false;
+        return false;
+      }
+    }
+    
+    // Resume context if suspended (for autoplay policies)
+    if (this.context.state === 'suspended') {
+      this.context.resume();
+    }
+    
+    return true;
+  }
+
+  toggleMute() {
+    this.muted = !this.muted;
+    localStorage.setItem('soundMuted', this.muted.toString());
+    return this.muted;
+  }
+
+  isMuted() {
+    return this.muted;
+  }
+
+  // Subtle hover sound - cheerful upward lilt
+  playHover() {
+    if (!this.ensureContext()) return;
+    
+    const oscillator = this.context.createOscillator();
+    const gainNode = this.context.createGain();
+    
+    oscillator.connect(gainNode);
+    gainNode.connect(this.gainNode);
+    
+    // Gentle upward sweep for cheerfulness
+    oscillator.frequency.setValueAtTime(700, this.context.currentTime);
+    oscillator.frequency.linearRampToValueAtTime(850, this.context.currentTime + 0.05);
+    oscillator.type = 'sine';
+    
+    gainNode.gain.setValueAtTime(0, this.context.currentTime);
+    gainNode.gain.linearRampToValueAtTime(0.25, this.context.currentTime + 0.01);
+    gainNode.gain.exponentialRampToValueAtTime(0.01, this.context.currentTime + 0.1);
+    
+    oscillator.start(this.context.currentTime);
+    oscillator.stop(this.context.currentTime + 0.1);
+  }
+
+  // Click sound - playful two-note chirp
+  playClick() {
+    if (!this.ensureContext()) return;
+    
+    // First note
+    const osc1 = this.context.createOscillator();
+    const gain1 = this.context.createGain();
+    
+    osc1.connect(gain1);
+    gain1.connect(this.gainNode);
+    
+    osc1.frequency.value = 550;
+    osc1.type = 'sine';
+    
+    gain1.gain.setValueAtTime(0, this.context.currentTime);
+    gain1.gain.linearRampToValueAtTime(0.3, this.context.currentTime + 0.01);
+    gain1.gain.exponentialRampToValueAtTime(0.01, this.context.currentTime + 0.04);
+    
+    osc1.start(this.context.currentTime);
+    osc1.stop(this.context.currentTime + 0.04);
+    
+    // Second note (slightly higher)
+    const osc2 = this.context.createOscillator();
+    const gain2 = this.context.createGain();
+    
+    osc2.connect(gain2);
+    gain2.connect(this.gainNode);
+    
+    osc2.frequency.value = 700;
+    osc2.type = 'sine';
+    
+    gain2.gain.setValueAtTime(0, this.context.currentTime + 0.03);
+    gain2.gain.linearRampToValueAtTime(0.25, this.context.currentTime + 0.035);
+    gain2.gain.exponentialRampToValueAtTime(0.01, this.context.currentTime + 0.08);
+    
+    osc2.start(this.context.currentTime + 0.03);
+    osc2.stop(this.context.currentTime + 0.08);
+  }
+
+  // Section expand sound - ascending tone
+  playExpand() {
+    if (!this.ensureContext()) return;
+    
+    const oscillator = this.context.createOscillator();
+    const gainNode = this.context.createGain();
+    
+    oscillator.connect(gainNode);
+    gainNode.connect(this.gainNode);
+    
+    oscillator.frequency.setValueAtTime(400, this.context.currentTime);
+    oscillator.frequency.linearRampToValueAtTime(600, this.context.currentTime + 0.1);
+    oscillator.type = 'sine';
+    
+    gainNode.gain.setValueAtTime(0, this.context.currentTime);
+    gainNode.gain.linearRampToValueAtTime(0.25, this.context.currentTime + 0.02);
+    gainNode.gain.exponentialRampToValueAtTime(0.01, this.context.currentTime + 0.12);
+    
+    oscillator.start(this.context.currentTime);
+    oscillator.stop(this.context.currentTime + 0.12);
+  }
+
+  // Section collapse sound - descending tone
+  playCollapse() {
+    if (!this.ensureContext()) return;
+    
+    const oscillator = this.context.createOscillator();
+    const gainNode = this.context.createGain();
+    
+    oscillator.connect(gainNode);
+    gainNode.connect(this.gainNode);
+    
+    oscillator.frequency.setValueAtTime(600, this.context.currentTime);
+    oscillator.frequency.linearRampToValueAtTime(400, this.context.currentTime + 0.08);
+    oscillator.type = 'sine';
+    
+    gainNode.gain.setValueAtTime(0, this.context.currentTime);
+    gainNode.gain.linearRampToValueAtTime(0.2, this.context.currentTime + 0.01);
+    gainNode.gain.exponentialRampToValueAtTime(0.01, this.context.currentTime + 0.1);
+    
+    oscillator.start(this.context.currentTime);
+    oscillator.stop(this.context.currentTime + 0.1);
+  }
+
+  // Card hover - warm cheerful tone
+  playCardHover() {
+    if (!this.ensureContext()) return;
+    
+    const oscillator = this.context.createOscillator();
+    const gainNode = this.context.createGain();
+    
+    oscillator.connect(gainNode);
+    gainNode.connect(this.gainNode);
+    
+    // Gentle upward sweep
+    oscillator.frequency.setValueAtTime(500, this.context.currentTime);
+    oscillator.frequency.linearRampToValueAtTime(620, this.context.currentTime + 0.06);
+    oscillator.type = 'sine';
+    
+    gainNode.gain.setValueAtTime(0, this.context.currentTime);
+    gainNode.gain.linearRampToValueAtTime(0.2, this.context.currentTime + 0.015);
+    gainNode.gain.exponentialRampToValueAtTime(0.01, this.context.currentTime + 0.12);
+    
+    oscillator.start(this.context.currentTime);
+    oscillator.stop(this.context.currentTime + 0.12);
+  }
+
+  // Goodbye sound - gentle descending farewell wave
+  playBye() {
+    if (!this.ensureContext()) return;
+    
+    // Three gentle descending notes
+    const notes = [600, 500, 400];
+    const startTimes = [0, 0.08, 0.16];
+    
+    notes.forEach((freq, i) => {
+      const osc = this.context.createOscillator();
+      const gain = this.context.createGain();
+      
+      osc.connect(gain);
+      gain.connect(this.gainNode);
+      
+      osc.frequency.value = freq;
+      osc.type = 'sine';
+      
+      const startTime = this.context.currentTime + startTimes[i];
+      gain.gain.setValueAtTime(0, startTime);
+      gain.gain.linearRampToValueAtTime(0.15, startTime + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.01, startTime + 0.12);
+      
+      osc.start(startTime);
+      osc.stop(startTime + 0.12);
+    });
+  }
+}
+
+class HapticFeedback {
+  constructor() {
+    this.enabled = 'vibrate' in navigator;
+  }
+
+  light() {
+    if (this.enabled) {
+      navigator.vibrate(10); // 10ms light tap
+    }
+  }
+
+  medium() {
+    if (this.enabled) {
+      navigator.vibrate(20); // 20ms medium tap
+    }
+  }
+
+  strong() {
+    if (this.enabled) {
+      navigator.vibrate(30); // 30ms strong tap
+    }
+  }
+
+  pattern(pattern) {
+    if (this.enabled) {
+      navigator.vibrate(pattern); // Custom pattern [vibrate, pause, vibrate...]
+    }
+  }
+}
+
+// Initialize feedback systems
+const audioFeedback = new AudioFeedback();
+const hapticFeedback = new HapticFeedback();
+
+// ============================================
 // Graph Configuration
 // ============================================
 
 const sectionConfig = {
-  work: { shape: 'square', itemSelector: '.work-item' },
-  opensource: { shape: 'triangle', itemSelector: '.project-card' },
-  talks: { shape: 'circle', itemSelector: '.talk-item' },
-  contact: { shape: 'diamond', itemSelector: '.contact-item' }
+  work: { shape: 'square', itemSelector: '.work-item', color: '#3D5FA8' },
+  projects: { shape: 'triangle', itemSelector: '.project-card', color: '#347A5C' },
+  media: { shape: 'circle', itemSelector: '.talk-item', color: '#B35F2E' },
+  contact: { shape: 'diamond', itemSelector: '.contact-item', color: '#7D529A' }
 };
 
-// Neutral color for all nodes
-const NODE_COLOR = '#5c5856';
-const NODE_COLOR_HOVER = '#9a9590';
-const REFERENCE_LINK_COLOR = '#d4a574'; // Accent color for reference links
+// Color system that adapts to theme
+const COLORS = {
+  dark: {
+    node: '#A3AAA7',
+    nodeHover: '#E7E9E8',
+    center: '#1D7A84',
+    link: '#3a3f3d',       // Single neutral color for all links
+    linkHover: '#5a605d',
+    bg: '#0F1211'
+  },
+  light: {
+    node: '#5E6461',
+    nodeHover: '#1C1E1D',
+    center: '#0F4D56',
+    link: '#c5c8c6',       // Single neutral color for all links
+    linkHover: '#9a9d9b',
+    bg: '#F7F7F5'
+  }
+};
+
+// Current theme colors
+let NODE_COLOR = COLORS.dark.node;
+let NODE_COLOR_HOVER = COLORS.dark.nodeHover;
+let CENTER_COLOR = COLORS.dark.center;
+let LINK_COLOR = COLORS.dark.link;
+let LINK_COLOR_HOVER = COLORS.dark.linkHover;
+let GRAPH_BG = COLORS.dark.bg;
 
 const domIndex = new Map();
-const nodeIndex = new Map(); // Map of reference IDs to node objects
+const nodeIndex = new Map(); // Map node IDs for manual cross-linking
 let svg, g, linksGroup, nodesGroup;
 let graphData = null;
 let currentHighlightedCategory = null;
@@ -39,15 +317,15 @@ const CENTER_SIZE = 8;
 const CATEGORY_SIZE = 14;
 const ITEM_SIZE = 6;
 
-// Force simulation parameters - tuned for fluid, elastic movement
+// Force simulation parameters - tuned for soft, gentle movement
 const FORCE_PARAMS = {
   linkDistance: 120,        // Spring rest length
-  linkStrength: 0.5,        // Spring stiffness (lower = more elastic)
-  chargeStrength: -300,     // Node repulsion (less aggressive)
+  linkStrength: 0.3,        // Spring stiffness (lower = softer/more elastic)
+  chargeStrength: -250,     // Node repulsion (gentler)
   chargeDistance: 300,      // Max distance for repulsion
   collideRadius: 30,        // Collision radius
-  centerStrength: 0.03,     // Pull toward center (gentle)
-  velocityDecay: 0.3        // Friction/damping (lower = more bouncy)
+  centerStrength: 0.02,     // Pull toward center (very gentle)
+  velocityDecay: 0.4        // Friction/damping (higher = less bouncy, softer settling)
 };
 
 // ============================================
@@ -64,11 +342,8 @@ function collectItemData(sectionKey, itemEl, fallbackIdx) {
   const subtitle = itemEl.dataset.graphSubtitle || itemEl.querySelector('.work-role, .project-desc, .talk-venue, .contact-value')?.textContent?.trim() || '';
   const id = explicitId || `${sectionKey}-${slugify(label)}-${fallbackIdx}`;
   
-  // Extract reference ID (can be explicitly set or derived from data-graph-ref)
-  const referenceId = itemEl.dataset.graphRef || extractReferenceId(id);
-  
-  // Collect full text content for reference detection
-  const fullText = (label + ' ' + subtitle + ' ' + itemEl.textContent).toLowerCase();
+  // Manual cross-references: data-graph-links-to="node-id-1,node-id-2"
+  const linksTo = itemEl.dataset.graphLinksTo ? itemEl.dataset.graphLinksTo.split(',').map(s => s.trim()) : [];
 
   itemEl.dataset.graphId = id;
 
@@ -81,38 +356,8 @@ function collectItemData(sectionKey, itemEl, fallbackIdx) {
     color: NODE_COLOR,
     shape: 'circle',
     size: ITEM_SIZE,
-    referenceId,        // For others to reference this node
-    fullText            // For detecting references to other nodes
+    linksTo  // Manual cross-references
   };
-}
-
-// Extract a clean reference ID from a node ID or label
-function extractReferenceId(idOrLabel) {
-  // Remove category prefix and indices, keep core identifier
-  return idOrLabel
-    .replace(/^(work|opensource|talks|contact)-/, '')
-    .replace(/-\d+$/, '')
-    .toLowerCase();
-}
-
-// Find potential references in text content
-function findReferences(text, allReferenceIds) {
-  const foundRefs = new Set();
-  const textLower = text.toLowerCase();
-  
-  // Check each reference ID to see if it appears in the text
-  allReferenceIds.forEach(refId => {
-    // Skip very short IDs to avoid false positives
-    if (refId.length < 3) return;
-    
-    // Check if reference ID appears as a whole word
-    const regex = new RegExp(`\\b${refId}\\b`, 'i');
-    if (regex.test(textLower)) {
-      foundRefs.add(refId);
-    }
-  });
-  
-  return Array.from(foundRefs);
 }
 
 function highlightDomItem(node) {
@@ -123,6 +368,27 @@ function highlightDomItem(node) {
   if (el) {
     el.classList.add('is-graph-highlight');
   }
+}
+
+// Generate curved path between two points
+function generateCurvedPath(sx, sy, tx, ty) {
+  const dx = tx - sx;
+  const dy = ty - sy;
+  const dist = Math.sqrt(dx * dx + dy * dy);
+  
+  if (dist < 1) return `M ${sx} ${sy} L ${tx} ${ty}`;
+  
+  // Perpendicular offset for curve - consistent direction based on angle
+  const angle = Math.atan2(dy, dx);
+  const curvature = Math.min(dist * 0.12, 25);
+  
+  // Control point perpendicular to midpoint
+  const mx = (sx + tx) / 2;
+  const my = (sy + ty) / 2;
+  const cx = mx + Math.cos(angle + Math.PI / 2) * curvature;
+  const cy = my + Math.sin(angle + Math.PI / 2) * curvature;
+  
+  return `M ${sx} ${sy} Q ${cx} ${cy} ${tx} ${ty}`;
 }
 
 // ============================================
@@ -200,7 +466,7 @@ function buildGraphData() {
     label: 'me',
     type: 'center',
     category: null,
-    color: NODE_COLOR,
+    color: CENTER_COLOR,
     shape: 'circle',
     size: CENTER_SIZE,
     x: centerX,
@@ -232,23 +498,21 @@ function buildGraphData() {
       label,
       type: 'category',
       category: catKey,
-      color: NODE_COLOR,
+      color: config.color,
       shape,
       size: CATEGORY_SIZE,
       x,
       y
     });
 
-    // Link category to center
+    // Link category to center - use neutral link color
     links.push({
       source: 'center',
       target: `cat-${catKey}`,
-      type: 'spine',
-      color: NODE_COLOR
+      type: 'spine'
     });
 
     const items = block.querySelectorAll(config.itemSelector);
-    const itemCount = items.length;
 
     // Item nodes - will be positioned by force simulation
     items.forEach((itemEl, itemIdx) => {
@@ -265,53 +529,44 @@ function buildGraphData() {
 
       nodes.push(node);
       domIndex.set(node.id, itemEl);
-      
-      // Add to reference index for cross-linking
-      if (node.referenceId) {
-        nodeIndex.set(node.referenceId, node);
-      }
+      nodeIndex.set(node.id, node);  // Index by ID for manual cross-linking
 
-      // Link item to category (hierarchical link)
+      // Link item to category (hierarchical link) - use neutral link color
       links.push({
         source: `cat-${catKey}`,
         target: node.id,
-        type: 'branch',
-        color: NODE_COLOR
+        type: 'branch'
       });
     });
   });
 
   // ============================================
-  // Create Reference Links (cross-category connections)
+  // Create Manual Reference Links (cross-category connections)
+  // Use data-graph-links-to="node-id-1,node-id-2" on HTML elements
   // ============================================
   
-  const allReferenceIds = Array.from(nodeIndex.keys());
   let referenceLinksCount = 0;
   
   nodes.forEach(node => {
-    if (node.type !== 'item' || !node.fullText) return;
+    if (node.type !== 'item' || !node.linksTo || node.linksTo.length === 0) return;
     
-    // Find references in this node's text
-    const references = findReferences(node.fullText, allReferenceIds);
-    
-    references.forEach(refId => {
-      const targetNode = nodeIndex.get(refId);
+    node.linksTo.forEach(targetId => {
+      const targetNode = nodeIndex.get(targetId);
       
-      // Don't create self-references or links to nodes in same category
-      if (targetNode && targetNode.id !== node.id && targetNode.category !== node.category) {
+      // Only create link if target exists and is different node
+      if (targetNode && targetNode.id !== node.id) {
         links.push({
           source: node.id,
           target: targetNode.id,
-          type: 'reference',
-          color: REFERENCE_LINK_COLOR
+          type: 'reference'
         });
         referenceLinksCount++;
-        console.log(`📚 Reference link: "${node.label}" → "${targetNode.label}" (via "${refId}")`);
+        console.log(`🔗 Manual link: "${node.label}" → "${targetNode.label}"`);
       }
     });
   });
 
-  console.log(`✨ Knowledge graph built: ${nodes.length} nodes, ${links.length} links (${referenceLinksCount} cross-references)`);
+  console.log(`✨ Knowledge graph built: ${nodes.length} nodes, ${links.length} links (${referenceLinksCount} manual cross-references)`);
 
   return { nodes, links };
 }
@@ -323,7 +578,7 @@ function buildGraphData() {
 const sectionBlocks = document.querySelectorAll('.section-block');
 let activeCategory = null;
 
-function toggleSection(sectionId, forceOpen = null) {
+function toggleSection(sectionId, forceOpen = null, updateHash = true) {
   const block = document.querySelector(`.section-block[data-section="${sectionId}"]`);
   if (!block) return false;
 
@@ -341,11 +596,20 @@ function toggleSection(sectionId, forceOpen = null) {
     header.setAttribute('aria-expanded', 'true');
     activeCategory = sectionId;
 
+    // Update URL hash
+    if (updateHash) {
+      window.history.pushState(null, '', `#${sectionId}`);
+    }
+
     setTimeout(() => {
       block.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     }, 100);
   } else {
     activeCategory = null;
+    // Clear hash when closing
+    if (updateHash) {
+      window.history.pushState(null, '', window.location.pathname);
+    }
   }
 
   if (svg) {
@@ -358,7 +622,50 @@ function toggleSection(sectionId, forceOpen = null) {
 sectionBlocks.forEach(block => {
   const header = block.querySelector('.section-header');
   const sectionId = block.dataset.section;
-  header.addEventListener('click', () => toggleSection(sectionId));
+  
+  // Add sound on hover
+  header.addEventListener('mouseenter', () => {
+    audioFeedback.playHover();
+    hapticFeedback.light();
+  });
+  
+  header.addEventListener('click', () => {
+    const willOpen = !block.classList.contains('active');
+    if (willOpen) {
+      audioFeedback.playExpand();
+      hapticFeedback.medium();
+    } else {
+      audioFeedback.playCollapse();
+      hapticFeedback.light();
+    }
+    toggleSection(sectionId);
+  });
+});
+
+// Handle URL hash on load
+window.addEventListener('DOMContentLoaded', () => {
+  const hash = window.location.hash.slice(1);
+  if (hash) {
+    const validSection = document.querySelector(`.section-block[data-section="${hash}"]`);
+    if (validSection) {
+      toggleSection(hash, true, false);
+    }
+  }
+});
+
+// Handle back/forward navigation
+window.addEventListener('hashchange', () => {
+  const hash = window.location.hash.slice(1);
+  if (hash) {
+    toggleSection(hash, true, false);
+  } else {
+    // Close all sections if hash is removed
+    sectionBlocks.forEach(b => {
+      b.classList.remove('active');
+      b.querySelector('.section-header').setAttribute('aria-expanded', 'false');
+    });
+    activeCategory = null;
+  }
 });
 
 // ============================================
@@ -377,7 +684,7 @@ function initGraph() {
     .append('svg')
     .attr('width', container.offsetWidth)
     .attr('height', container.offsetHeight)
-    .style('background-color', '#0a0c10');
+    .style('background-color', GRAPH_BG);
 
   // Create main group for transformation (panning and zooming)
   g = svg.append('g').attr('class', 'graph-root');
@@ -483,40 +790,31 @@ function renderGraph() {
     .velocityDecay(FORCE_PARAMS.velocityDecay)
     .on('tick', ticked);
 
-  // Render links with straight lines (fluidity comes from physics)
+  // Render links as curved paths
   linksGroup
-    .selectAll('line')
+    .selectAll('path')
     .data(graphData.links)
     .enter()
-    .append('line')
+    .append('path')
     .attr('class', d => `link link-${d.type}`)
-    .attr('data-target', d => d.target)
-    .attr('x1', d => {
+    .attr('d', d => {
       const source = graphData.nodes.find(n => n.id === d.source);
-      return source ? source.x : centerX;
-    })
-    .attr('y1', d => {
-      const source = graphData.nodes.find(n => n.id === d.source);
-      return source ? source.y : centerY;
-    })
-    .attr('x2', d => {
       const target = graphData.nodes.find(n => n.id === d.target);
-      return target ? target.x : centerX;
+      return generateCurvedPath(
+        source?.x ?? centerX, source?.y ?? centerY,
+        target?.x ?? centerX, target?.y ?? centerY
+      );
     })
-    .attr('y2', d => {
-      const target = graphData.nodes.find(n => n.id === d.target);
-      return target ? target.y : centerY;
-    })
-    .attr('stroke', d => d.color)
+    .attr('fill', 'none')
+    .attr('stroke', LINK_COLOR)
     .attr('stroke-width', d => {
-      if (d.type === 'spine') return 1.5;
-      if (d.type === 'reference') return 1.2;
-      return 1;
+      if (d.type === 'spine') return 1;
+      return 0.75;
     })
     .attr('stroke-opacity', d => {
       if (d.type === 'branch') return 0; // Hidden until subgraph opens
       if (d.type === 'reference') return 0; // Hidden until both nodes visible
-      return 0.3;
+      return 0.4;
     });
 
   // Render nodes
@@ -540,10 +838,11 @@ function renderGraph() {
 
   // No labels - removed per requirements
 
-  // Add drag behavior that works with force simulation
+  // Drag behavior with clickDistance to distinguish from clicks
   const drag = d3.drag()
+    .clickDistance(4)
     .on('start', function(event, d) {
-      if (!event.active) simulation.alphaTarget(0.3).restart();
+      if (!event.active) simulation.alphaTarget(0.2).restart();
       d3.select(this).style('cursor', 'grabbing');
       d.fx = d.x;
       d.fy = d.y;
@@ -555,7 +854,6 @@ function renderGraph() {
     .on('end', function(event, d) {
       if (!event.active) simulation.alphaTarget(0);
       d3.select(this).style('cursor', 'grab');
-      // Release the node so it can move freely again
       if (d.type !== 'center') {
         d.fx = null;
         d.fy = null;
@@ -569,26 +867,38 @@ function renderGraph() {
     .on('mouseover', function(event, d) {
       if (d.hidden) return;
       
+      // Play sound based on node type
+      if (d.type === 'center') {
+        audioFeedback.playHover();
+      } else if (d.type === 'category') {
+        audioFeedback.playCardHover();
+      } else {
+        audioFeedback.playHover();
+      }
+      hapticFeedback.light();
+      
       // Scale up node on hover
       d3.select(this).select('g')
         .transition()
-        .duration(150)
-        .attr('transform', 'scale(1.3)');
+        .duration(250)
+        .ease(d3.easeCubicOut)
+        .attr('transform', 'scale(1.2)');
       
-      // Highlight connected links (but not reference links - only hierarchical)
+      // Highlight connected visible links only (don't reveal hidden ones)
       linksGroup.selectAll('.link')
-        .filter(link => {
-          // Only highlight spine and branch links, not references
-          if (link.type === 'reference') return false;
-          
+        .filter(function(link) {
           const sourceId = typeof link.source === 'object' ? link.source.id : link.source;
           const targetId = typeof link.target === 'object' ? link.target.id : link.target;
-          return sourceId === d.id || targetId === d.id;
+          const isConnected = sourceId === d.id || targetId === d.id;
+          const isVisible = parseFloat(d3.select(this).attr('stroke-opacity')) > 0;
+          return isConnected && isVisible;
         })
         .transition()
-        .duration(150)
-        .attr('stroke-opacity', 0.7)
-        .attr('stroke-width', 2.5);
+        .duration(250)
+        .ease(d3.easeCubicOut)
+        .attr('stroke', LINK_COLOR_HOVER)
+        .attr('stroke-opacity', 0.8)
+        .attr('stroke-width', 1.5);
       
       // Highlight DOM item if it's an item node
       if (d.type === 'item') {
@@ -601,17 +911,20 @@ function renderGraph() {
     .on('mouseout', function(event, d) {
       d3.select(this).select('g')
         .transition()
-        .duration(150)
+        .duration(250)
+        .ease(d3.easeCubicOut)
         .attr('transform', 'scale(1)');
       
-      // Reset link opacity (working with force simulation link objects)
+      // Reset link styling
       linksGroup.selectAll('.link')
         .transition()
-        .duration(150)
+        .duration(250)
+        .ease(d3.easeCubicOut)
+        .attr('stroke', LINK_COLOR)
         .attr('stroke-opacity', link => {
           if (link.type === 'branch') {
             const targetNode = typeof link.target === 'object' ? link.target : graphData.nodes.find(n => n.id === link.target);
-            return targetNode && !targetNode.hidden ? 0.3 : 0;
+            return targetNode && !targetNode.hidden ? 0.4 : 0;
           }
           if (link.type === 'reference') {
             const sourceNode = typeof link.source === 'object' ? link.source : graphData.nodes.find(n => n.id === link.source);
@@ -619,12 +932,11 @@ function renderGraph() {
             const bothVisible = sourceNode && targetNode && !sourceNode.hidden && !targetNode.hidden;
             return bothVisible ? 0.5 : 0;
           }
-          return 0.3;
+          return 0.4;
         })
         .attr('stroke-width', link => {
-          if (link.type === 'spine') return 1.5;
-          if (link.type === 'reference') return 1.2;
-          return 1;
+          if (link.type === 'spine') return 1;
+          return 0.75;
         });
       
       highlightDomItem(null);
@@ -633,8 +945,11 @@ function renderGraph() {
     .on('click', function(event, d) {
       event.stopPropagation();
       
+      // Play click sound
+      audioFeedback.playClick();
+      hapticFeedback.medium();
+      
       if (d.type === 'category') {
-        // Toggle subgraph visibility
         const catKey = d.id.replace('cat-', '');
         toggleSubgraph(catKey);
         toggleSection(catKey, true);
@@ -646,38 +961,60 @@ function renderGraph() {
           } else {
             zoomToFit();
           }
-        }, 350);
+        }, 450);
       } else if (d.type === 'item') {
-        // Find all categories that contain nodes referenced by or referencing this node
-        const relatedCategories = getRelatedCategories(d);
-        
-        // Expand this node's category
-        toggleSection(d.category, true);
-        
-        // Expand all related categories to show cross-references
-        relatedCategories.forEach(catKey => {
-          toggleSection(catKey, true);
-        });
-        
-        // Show all related subgraphs
-        showMultipleSubgraphs([d.category, ...relatedCategories]);
-        
-        // Recenter graph to show all visible nodes (wait for nodes to appear)
-        setTimeout(() => {
-          zoomToVisibleNodes();
-        }, 350);
-        
-        // Scroll to the clicked item
+        // Get the DOM element for this item
         const el = domIndex.get(d.id);
-        if (el) {
+        
+        // Check if element is a link with href
+        if (el && el.hasAttribute('href')) {
+          const href = el.getAttribute('href');
+          const isExternal = el.getAttribute('target') === '_blank';
+          
+          if (isExternal) {
+            // Play goodbye sound and open external link
+            audioFeedback.playBye();
+            hapticFeedback.pattern([10, 30, 10]);
+            setTimeout(() => {
+              window.open(href, '_blank', 'noopener,noreferrer');
+            }, 100);
+          } else {
+            // Internal link - just navigate
+            window.location.href = href;
+          }
+        } else {
+          // Not a link - expand sections and scroll to item
+          // Find all categories that contain nodes referenced by or referencing this node
+          const relatedCategories = getRelatedCategories(d);
+          
+          // Expand this node's category
+          toggleSection(d.category, true);
+          
+          // Expand all related categories to show cross-references
+          relatedCategories.forEach(catKey => {
+            toggleSection(catKey, true);
+          });
+          
+          // Show all related subgraphs
+          showMultipleSubgraphs([d.category, ...relatedCategories]);
+          
+          // Recenter graph to show all visible nodes (wait for nodes to appear)
           setTimeout(() => {
-            el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-          }, 100);
+            zoomToVisibleNodes();
+          }, 450);
+          
+          // Scroll to the clicked item
+          if (el) {
+            setTimeout(() => {
+              el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }, 100);
+          }
         }
       } else if (d.type === 'center') {
-        // Clicking center shuffles the graph to random positions
+        // Clicking center opens the about me section and shuffles the graph
+        toggleSection('intro', true);
         reshuffleGraph();
-        
+
         // Collapse any open subgraph
         if (activeSubgraph) {
           toggleSubgraph(null);
@@ -702,17 +1039,19 @@ function renderGraph() {
         // Update visibility
         nodesGroup.selectAll('.node-item')
           .transition()
-          .duration(300)
+          .duration(400)
+          .ease(d3.easeCubicOut)
           .style('opacity', 0)
           .style('pointer-events', 'none');
         
         // Hide all branch and reference links
         linksGroup.selectAll('.link-branch, .link-reference')
           .transition()
-          .duration(300)
+          .duration(400)
+          .ease(d3.easeCubicOut)
           .attr('stroke-opacity', 0);
         
-        simulation.alpha(0.2).restart();
+        simulation.alpha(0.15).restart();
         zoomToFit();
       }
       
@@ -783,7 +1122,7 @@ function showMultipleSubgraphs(categoryKeys) {
     .duration(300)
     .attr('stroke-opacity', d => {
       const targetNode = typeof d.target === 'object' ? d.target : graphData.nodes.find(n => n.id === d.target);
-      return targetNode && !targetNode.hidden ? 0.3 : 0;
+      return targetNode && !targetNode.hidden ? 0.4 : 0;
     });
   
   // Update visibility of reference links (show when both nodes are visible)
@@ -794,13 +1133,11 @@ function showMultipleSubgraphs(categoryKeys) {
       const sourceNode = typeof d.source === 'object' ? d.source : graphData.nodes.find(n => n.id === d.source);
       const targetNode = typeof d.target === 'object' ? d.target : graphData.nodes.find(n => n.id === d.target);
       const bothVisible = sourceNode && targetNode && !sourceNode.hidden && !targetNode.hidden;
-      return bothVisible ? 0.5 : 0;
+      return bothVisible ? 0.4 : 0;
     });
   
   // Restart simulation to settle the layout
   simulation.alpha(0.3).restart();
-  
-  // Don't auto-zoom when showing multiple subgraphs - let user see the connections
 }
 
 function toggleSubgraph(categoryKey) {
@@ -834,7 +1171,7 @@ function toggleSubgraph(categoryKey) {
     .duration(300)
     .attr('stroke-opacity', d => {
       const targetNode = typeof d.target === 'object' ? d.target : graphData.nodes.find(n => n.id === d.target);
-      return targetNode && !targetNode.hidden ? 0.3 : 0;
+      return targetNode && !targetNode.hidden ? 0.4 : 0;
     });
   
   // Update visibility of reference links (show when both nodes are visible)
@@ -845,7 +1182,7 @@ function toggleSubgraph(categoryKey) {
       const sourceNode = typeof d.source === 'object' ? d.source : graphData.nodes.find(n => n.id === d.source);
       const targetNode = typeof d.target === 'object' ? d.target : graphData.nodes.find(n => n.id === d.target);
       const bothVisible = sourceNode && targetNode && !sourceNode.hidden && !targetNode.hidden;
-      return bothVisible ? 0.5 : 0;
+      return bothVisible ? 0.4 : 0;
     });
   
   // Restart simulation to settle the layout
@@ -960,16 +1297,11 @@ function zoomToFit() {
 
 // Called on each tick of the force simulation
 function ticked() {
-  // Update node positions
   nodesGroup.selectAll('.node')
     .attr('transform', d => `translate(${d.x}, ${d.y})`);
 
-  // Update link positions - straight lines that flow with the physics
   linksGroup.selectAll('.link')
-    .attr('x1', d => d.source.x)
-    .attr('y1', d => d.source.y)
-    .attr('x2', d => d.target.x)
-    .attr('y2', d => d.target.y);
+    .attr('d', d => generateCurvedPath(d.source.x, d.source.y, d.target.x, d.target.y));
 }
 
 function updateNodePositions() {
@@ -989,10 +1321,12 @@ function reshuffleGraph() {
   const centerNode = nodesGroup.select('.node[data-id="center"]');
   centerNode.select('g')
     .transition()
-    .duration(200)
-    .attr('transform', 'scale(1.8)')
-    .transition()
     .duration(300)
+    .ease(d3.easeCubicOut)
+    .attr('transform', 'scale(1.5)')
+    .transition()
+    .duration(400)
+    .ease(d3.easeCubicOut)
     .attr('transform', 'scale(1)');
   
   // Define radius ranges for different node types
@@ -1029,12 +1363,12 @@ function reshuffleGraph() {
   });
   
   // Restart simulation with high energy to settle into new positions
-  simulation.alpha(1).restart();
+  simulation.alpha(0.8).restart();
   
   // Zoom back to fit the whole graph
   setTimeout(() => {
     zoomToFit();
-  }, 100);
+  }, 150);
 }
 
 function highlightCategory(categoryKey) {
@@ -1055,11 +1389,11 @@ tooltip.className = 'graph-tooltip';
 tooltip.style.cssText = `
   position: fixed;
   padding: 6px 10px;
-  background: rgba(10, 12, 16, 0.9);
-  border: 1px solid rgba(92, 88, 86, 0.4);
+  background: rgba(15, 18, 17, 0.95);
+  border: 1px solid rgba(34, 39, 38, 0.8);
   font-family: 'JetBrains Mono', monospace;
   font-size: 10px;
-  color: #9a9590;
+  color: #A3AAA7;
   pointer-events: none;
   opacity: 0;
   transition: opacity 150ms ease;
@@ -1070,13 +1404,29 @@ tooltip.style.cssText = `
 `;
 document.body.appendChild(tooltip);
 
+function updateTooltipTheme(theme) {
+  if (theme === 'light') {
+    tooltip.style.background = 'rgba(247, 247, 245, 0.95)';
+    tooltip.style.borderColor = 'rgba(225, 228, 226, 0.8)';
+    tooltip.style.color = '#5E6461';
+  } else {
+    tooltip.style.background = 'rgba(15, 18, 17, 0.95)';
+    tooltip.style.borderColor = 'rgba(34, 39, 38, 0.8)';
+    tooltip.style.color = '#A3AAA7';
+  }
+}
+
 function showTooltip(event, node) {
   if (!node || node.hidden) return;
 
+  const theme = document.documentElement.getAttribute('data-theme') || 'dark';
+  const colors = theme === 'light' 
+    ? { primary: '#1C1E1D', muted: '#7A7F7C', accent: '#5E6461' }
+    : { primary: '#E7E9E8', muted: '#6E7672', accent: '#A3AAA7' };
+
   if (node.type === 'center') {
     tooltip.innerHTML = `
-      <div style="color: #e8e6e3; margin-bottom: 2px;">${node.label}</div>
-      <div style="color: #5c5856; font-size: 9px;">click to shuffle</div>
+      <div style="color: ${colors.primary}; margin-bottom: 2px;">${node.label}</div>
     `;
   } else if (node.type === 'item') {
     // Check if this node has cross-references
@@ -1084,14 +1434,14 @@ function showTooltip(event, node) {
     const hasRefs = relatedCats.length > 0;
     
     tooltip.innerHTML = `
-      <div style="color: #e8e6e3; margin-bottom: 2px;">${node.label}</div>
-      ${node.subtitle ? `<div style="color: #5c5856; font-size: 9px;">${node.subtitle}</div>` : ''}
-      ${hasRefs ? `<div style="color: #d4a574; font-size: 9px; margin-top: 2px;">🔗 ${relatedCats.length} cross-reference${relatedCats.length > 1 ? 's' : ''}</div>` : ''}
+      <div style="color: ${colors.primary}; margin-bottom: 2px;">${node.label}</div>
+      ${node.subtitle ? `<div style="color: ${colors.muted}; font-size: 9px;">${node.subtitle}</div>` : ''}
+      ${hasRefs ? `<div style="color: ${colors.accent}; font-size: 9px; margin-top: 2px;">↗ ${relatedCats.length} connection${relatedCats.length > 1 ? 's' : ''}</div>` : ''}
     `;
   } else {
     tooltip.innerHTML = `
-      <div style="color: #e8e6e3; margin-bottom: 2px;">${node.label}</div>
-      ${node.subtitle ? `<div style="color: #5c5856; font-size: 9px;">${node.subtitle}</div>` : ''}
+      <div style="color: ${colors.primary}; margin-bottom: 2px;">${node.label}</div>
+      ${node.subtitle ? `<div style="color: ${colors.muted}; font-size: 9px;">${node.subtitle}</div>` : ''}
     `;
   }
 
@@ -1135,14 +1485,307 @@ styleSheet.textContent = graphStyles;
 document.head.appendChild(styleSheet);
 
 // ============================================
+// Add Sound to Interactive Elements
+// ============================================
+
+function addSoundToElements() {
+  // Add sound to project cards
+  document.querySelectorAll('.project-card').forEach(card => {
+    card.addEventListener('mouseenter', () => {
+      audioFeedback.playCardHover();
+      hapticFeedback.light();
+    });
+    card.addEventListener('click', (e) => {
+      // Check if it's an external link
+      if (card.hasAttribute('href') && card.getAttribute('target') === '_blank') {
+        e.preventDefault();
+        audioFeedback.playBye();
+        hapticFeedback.pattern([10, 30, 10]); // Short-long-short pattern
+        setTimeout(() => {
+          window.open(card.getAttribute('href'), '_blank', 'noopener,noreferrer');
+        }, 100);
+      } else {
+        audioFeedback.playClick();
+        hapticFeedback.light();
+      }
+    });
+  });
+
+  // Add sound to talk items
+  document.querySelectorAll('.talk-item').forEach(item => {
+    item.addEventListener('mouseenter', () => {
+      audioFeedback.playCardHover();
+      hapticFeedback.light();
+    });
+    item.addEventListener('click', (e) => {
+      // Check if it's an external link
+      if (item.hasAttribute('href') && item.getAttribute('target') === '_blank') {
+        e.preventDefault();
+        audioFeedback.playBye();
+        hapticFeedback.pattern([10, 30, 10]);
+        setTimeout(() => {
+          window.open(item.getAttribute('href'), '_blank', 'noopener,noreferrer');
+        }, 100);
+      } else {
+        audioFeedback.playClick();
+        hapticFeedback.light();
+      }
+    });
+  });
+
+  // Add sound to contact items
+  document.querySelectorAll('.contact-item').forEach(item => {
+    item.addEventListener('mouseenter', () => {
+      audioFeedback.playCardHover();
+      hapticFeedback.light();
+    });
+    item.addEventListener('click', (e) => {
+      // Check if it's an external link
+      if (item.hasAttribute('href') && item.getAttribute('target') === '_blank') {
+        e.preventDefault();
+        audioFeedback.playBye();
+        hapticFeedback.pattern([10, 30, 10]);
+        setTimeout(() => {
+          window.open(item.getAttribute('href'), '_blank', 'noopener,noreferrer');
+        }, 100);
+      } else {
+        audioFeedback.playClick();
+        hapticFeedback.light();
+      }
+    });
+  });
+
+  // Add sound to work items
+  document.querySelectorAll('.work-item').forEach(item => {
+    item.addEventListener('mouseenter', () => {
+      audioFeedback.playHover();
+      hapticFeedback.light();
+    });
+  });
+
+  // Add sound to work join link
+  document.querySelectorAll('.work-join-link').forEach(link => {
+    link.addEventListener('mouseenter', () => {
+      audioFeedback.playCardHover();
+      hapticFeedback.light();
+    });
+    link.addEventListener('click', (e) => {
+      // This is an external link
+      if (link.hasAttribute('href') && link.getAttribute('target') === '_blank') {
+        e.preventDefault();
+        audioFeedback.playBye();
+        hapticFeedback.pattern([10, 30, 10]);
+        setTimeout(() => {
+          window.open(link.getAttribute('href'), '_blank', 'noopener,noreferrer');
+        }, 100);
+      } else {
+        audioFeedback.playClick();
+        hapticFeedback.light();
+      }
+    });
+  });
+}
+
+function updateMuteButton(muted) {
+  const button = document.getElementById('mute-toggle');
+  const icon = document.getElementById('mute-icon');
+  const label = document.getElementById('mute-label');
+  
+  if (!button || !icon || !label) return;
+  
+  if (muted) {
+    // Show muted icon
+    icon.innerHTML = `
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+        <line x1="23" y1="9" x2="17" y2="15"></line>
+        <line x1="17" y1="9" x2="23" y2="15"></line>
+      </svg>
+    `;
+    label.textContent = 'Muted';
+    button.classList.add('muted');
+  } else {
+    // Show sound on icon
+    icon.innerHTML = `
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+        <path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+        <path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path>
+      </svg>
+    `;
+    label.textContent = 'Sound';
+    button.classList.remove('muted');
+  }
+}
+
+// ============================================
 // Initialize
 // ============================================
 
-document.addEventListener('DOMContentLoaded', initGraph);
+document.addEventListener('DOMContentLoaded', () => {
+  initGraph();
+  addSoundToElements();
+  
+  // Initialize mute button state
+  updateMuteButton(audioFeedback.isMuted());
+});
 
 document.addEventListener('keydown', (e) => {
   if (e.key === 'Escape' && activeCategory) {
     toggleSection(activeCategory, false);
+  }
+});
+
+// ============================================
+// Theme Toggle
+// ============================================
+
+function getTheme() {
+  // Check localStorage first (user's explicit choice)
+  const stored = localStorage.getItem('theme');
+  if (stored) return stored;
+  
+  // Otherwise observe system preference, default to dark
+  if (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches) {
+    return 'light';
+  }
+  
+  return 'dark'; // Default to dark
+}
+
+function setTheme(theme) {
+  document.documentElement.setAttribute('data-theme', theme);
+  localStorage.setItem('theme', theme);
+  
+  // Update theme colors for graph
+  const colors = COLORS[theme];
+  NODE_COLOR = colors.node;
+  NODE_COLOR_HOVER = colors.nodeHover;
+  CENTER_COLOR = colors.center;
+  LINK_COLOR = colors.link;
+  LINK_COLOR_HOVER = colors.linkHover;
+  GRAPH_BG = colors.bg;
+  
+  // Update SVG background if it exists
+  if (svg) {
+    svg.style('background-color', GRAPH_BG);
+  }
+  
+  // Update tooltip theme
+  updateTooltipTheme(theme);
+  
+  // Update toggle button
+  updateThemeToggle(theme);
+  
+  // Rebuild graph with new colors
+  if (graphData) {
+    // Update center node color
+    const centerNode = graphData.nodes.find(n => n.id === 'center');
+    if (centerNode) {
+      centerNode.color = CENTER_COLOR;
+    }
+    
+    // Update all item node colors
+    graphData.nodes.forEach(node => {
+      if (node.type === 'item') {
+        node.color = NODE_COLOR;
+      }
+    });
+    
+    // Re-render nodes with new colors
+    if (nodesGroup) {
+      nodesGroup.selectAll('.node').each(function(d) {
+        const nodeGroup = d3.select(this);
+        // Remove old shape
+        nodeGroup.selectAll('g').remove();
+        // Add new shape with updated color
+        const shapeGroup = createShape(d.shape, d.size, d.color);
+        nodeGroup.node().appendChild(shapeGroup);
+      });
+    }
+    
+    // Update link colors (all use same neutral color now)
+    if (linksGroup) {
+      linksGroup.selectAll('.link')
+        .attr('stroke', LINK_COLOR);
+    }
+  }
+}
+
+function updateThemeToggle(theme) {
+  const icon = document.getElementById('theme-icon');
+  const label = document.getElementById('theme-label');
+  
+  if (theme === 'light') {
+    // Show moon icon (for switching to dark)
+    icon.innerHTML = `
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+      </svg>
+    `;
+    label.textContent = 'Dark';
+  } else {
+    // Show sun icon (for switching to light)
+    icon.innerHTML = `
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="5"></circle>
+        <line x1="12" y1="1" x2="12" y2="3"></line>
+        <line x1="12" y1="21" x2="12" y2="23"></line>
+        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+        <line x1="1" y1="12" x2="3" y2="12"></line>
+        <line x1="21" y1="12" x2="23" y2="12"></line>
+        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+      </svg>
+    `;
+    label.textContent = 'Light';
+  }
+}
+
+// Initialize theme on load
+const initialTheme = getTheme();
+setTheme(initialTheme);
+
+// Mute toggle click handler
+document.addEventListener('DOMContentLoaded', () => {
+  const muteToggle = document.getElementById('mute-toggle');
+  if (muteToggle) {
+    muteToggle.addEventListener('mouseenter', () => {
+      // Don't play sound on mute button hover if muted
+      if (!audioFeedback.isMuted()) {
+        audioFeedback.playHover();
+      }
+      hapticFeedback.light();
+    });
+    muteToggle.addEventListener('click', () => {
+      const nowMuted = audioFeedback.toggleMute();
+      updateMuteButton(nowMuted);
+      
+      // Play a sound when unmuting (to confirm it works)
+      if (!nowMuted) {
+        audioFeedback.playClick();
+      }
+      hapticFeedback.medium();
+    });
+  }
+});
+
+// Theme toggle click handler
+document.addEventListener('DOMContentLoaded', () => {
+  const toggle = document.getElementById('theme-toggle');
+  if (toggle) {
+    toggle.addEventListener('mouseenter', () => {
+      audioFeedback.playHover();
+      hapticFeedback.light();
+    });
+    toggle.addEventListener('click', () => {
+      audioFeedback.playClick();
+      hapticFeedback.medium();
+      const currentTheme = document.documentElement.getAttribute('data-theme') || 'dark';
+      const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+      setTheme(newTheme);
+    });
   }
 });
 

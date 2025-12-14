@@ -1,12 +1,9 @@
-<!DOCTYPE html>
+n u <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Digital Garden</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:ital,wght@0,300;0,400;0,600;1,300;1,400&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+  <title>Adam Hearn</title>
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -19,31 +16,38 @@
       <header class="header">
         <div class="header-inner">
           <h1 class="name">Adam Hearn</h1>
-          <p class="tagline">Software Magician</p>
+          <p class="tagline">Aut inveniam viam aut faciam</p>
         </div>
       </header>
 
-      <section class="intro">
-        <p class="intro-text">
-          I build software that scales. When I'm not shipping code, I'm contributing to 
-          open source projects and sharing knowledge through talks and writing.
-        </p>
-        <p class="intro-text secondary">
-          Drag and click the nodes to explore.
-        </p>
-      </section>
+      <!-- About Me Section -->
+      <div class="section-block" data-section="intro">
+        <button class="section-header" aria-expanded="false" aria-controls="intro-content">
+          <span class="section-shape">
+            <svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor">
+              <circle cx="6" cy="6" r="5"/>
+            </svg>
+          </span>
+          <span class="section-title">Me</span>
+          <span class="section-icon">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+              <path d="M4 6L8 10L12 6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </span>
+        </button>
+        <div class="section-content" id="intro-content">
+          <div class="section-inner">
+            <p class="section-subtitle">Who I am</p>
 
-      <!-- Expandable Sections -->
-      <!-- 
-        Graph Reference System:
-        - Add data-graph-ref="refid" to create a reference ID for a node
-        - Mention the refid in any other node's text to auto-create links
-        - Example: data-graph-ref="kyo" on a project, then mention "kyo" in a talk title
-        - Reference links appear as dotted gold lines connecting related nodes
-      -->
+            <p class="intro-text">
+                <b>Adam Hearn</b> is an engineer and researcher. His initiatives intersect performance, novel computing, and distributed systems.
+            </p>
+          </div>
+        </div>
+      </div>
+
       <nav class="sections" role="navigation" aria-label="Site sections">
-        
-        <!-- Work Section -->
+        <!-- Work -->
         <div class="section-block" data-section="work">
           <button class="section-header" aria-expanded="false" aria-controls="work-content">
             <span class="section-shape">
@@ -60,102 +64,126 @@
           </button>
           <div class="section-content" id="work-content">
             <div class="section-inner">
-              <p class="section-subtitle">Building systems at scale</p>
-              
-              <div class="work-item" data-graph-id="work-amazon" data-graph-label="Amazon" data-graph-subtitle="SWE · Present">
-                <span class="work-period">2022 — Present</span>
-                <h3 class="work-company">Amazon</h3>
-                <p class="work-role">Software Engineer</p>
-                <p class="work-description">
-                  Working on distributed systems and cloud infrastructure. 
-                  Building tools that power millions of customer experiences daily.
-                </p>
+              <p class="section-subtitle">Building at scale</p>
+
+              <div class="work-item" data-graph-id="work-amazon" data-graph-label="Amazon Search" data-graph-subtitle="Palo Alto, CA">
+                <h3 class="work-company">Amazon Search</h3>
+                
+                <div class="work-roles">
+                  <div class="work-role-item">
+                      <p class="work-role">Software Development Engineer II</p>
+                      <span class="work-role-period">2023 —</span>
+                      <p class="work-location">Palo Alto, CA</p>
+                    <p class="work-description">Building the Future.</p>
+                  </div>
+                  
+                  <div class="work-role-item">
+                      <p class="work-role">Software Development Engineer I</p>
+                      <span class="work-role-period">2022 - 2023</span>
+                    <p class="work-location">Palo Alto, CA</p>
+                  </div>
+                  
+                  <div class="work-role-item">
+                      <p class="work-role">Software Development Engineer Intern</p>
+                    <span class="work-role-period">2021</span>
+                    <p class="work-location">Seattle, Washington</p>
+                    <p class="work-description">Solving Cold Start.</p>
+                  </div>
+                  <a href="https://amazon.jobs/content/en/teams/shopping" class="work-join-link" target="_blank" rel="noopener">Join me ↗</a>
+                </div>
               </div>
               
-              <div class="work-item" data-graph-id="work-previous" data-graph-label="Previous Co" data-graph-subtitle="SWE · 2020">
-                <span class="work-period">Previous</span>
-                <h3 class="work-company">Your Previous Role</h3>
-                <p class="work-role">Software Engineer</p>
-                <p class="work-description">
-                  Add your previous experience here.
-                </p>
-              </div>
             </div>
           </div>
         </div>
 
-        <!-- Open Source Section -->
-        <div class="section-block" data-section="opensource">
-          <button class="section-header" aria-expanded="false" aria-controls="opensource-content">
+        <!-- Projects -->
+        <div class="section-block" data-section="projects">
+          <button class="section-header" aria-expanded="false" aria-controls="projects-content">
             <span class="section-shape">
               <svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor">
                 <polygon points="6,0 12,11 0,11"/>
               </svg>
             </span>
-            <span class="section-title">Open Source</span>
+            <span class="section-title">Projects</span>
             <span class="section-icon">
               <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
                 <path d="M4 6L8 10L12 6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
               </svg>
             </span>
           </button>
-          <div class="section-content" id="opensource-content">
+          <div class="section-content" id="projects-content">
             <div class="section-inner">
-              <p class="section-subtitle">Contributing to the commons</p>
+              <p class="section-subtitle">Building in the void</p>
               
               <div class="project-grid">
-                <a href="#" class="project-card" data-graph-id="oss-kyo" data-graph-ref="kyo" data-graph-label="Kyo" data-graph-subtitle="Functional effects for Scala">
+                <a href="https://github.com/getkyo/kyo" class="project-card" target="_blank" rel="noopener" data-graph-id="project-kyo" data-graph-ref="kyo" data-graph-label="Kyo" data-graph-subtitle="Lead Maintainer · Active">
                   <span class="project-icon">
                     <svg width="10" height="10" viewBox="0 0 12 12" fill="currentColor"><polygon points="6,0 12,11 0,11"/></svg>
                   </span>
                   <h3 class="project-name">Kyo</h3>
                   <p class="project-desc">A novel functional effects system for Scala, focused on simplicity and performance.</p>
+                  <div class="project-meta">
+                    <span class="project-role">Lead Maintainer</span>
+                    <span class="project-status project-status-active">Active</span>
+                    <span class="project-type">Open Source</span>
+                  </div>
                   <span class="project-link">View on GitHub ↗</span>
                 </a>
                 
-                <a href="#" class="project-card" data-graph-id="oss-another" data-graph-ref="streams" data-graph-label="Stream Lib" data-graph-subtitle="Algebraic stream processing">
+                <a href="https://github.com/zio/zio" class="project-card" target="_blank" rel="noopener" data-graph-id="project-zio" data-graph-ref="zio" data-graph-label="ZIO" data-graph-subtitle="Core Maintainer · Active">
                   <span class="project-icon">
                     <svg width="10" height="10" viewBox="0 0 12 12" fill="currentColor"><polygon points="6,0 12,11 0,11"/></svg>
                   </span>
-                  <h3 class="project-name">Stream Lib</h3>
-                  <p class="project-desc">Algebraic effects for stream composition and processing.</p>
+                  <h3 class="project-name">ZIO</h3>
+                  <p class="project-desc">Type-safe, composable asynchronous and concurrent programming for Scala.</p>
+                  <div class="project-meta">
+                    <span class="project-role">Core Maintainer</span>
+                    <span class="project-status project-status-active">Active</span>
+                    <span class="project-type">Open Source</span>
+                  </div>
                   <span class="project-link">View on GitHub ↗</span>
                 </a>
                 
-                <a href="#" class="project-card" data-graph-id="oss-contribution" data-graph-ref="scala" data-graph-label="Scala Contributions" data-graph-subtitle="Various Scala ecosystem">
+                <a href="#" class="project-card" target="_blank" rel="noopener" data-graph-id="project-vinture" data-graph-ref="vinture" data-graph-label="Vinture" data-graph-subtitle="Co-founder · Sunset">
                   <span class="project-icon">
                     <svg width="10" height="10" viewBox="0 0 12 12" fill="currentColor"><polygon points="6,0 12,11 0,11"/></svg>
                   </span>
-                  <h3 class="project-name">Scala Contributions</h3>
-                  <p class="project-desc">Contributions to various Scala ecosystem projects.</p>
-                  <span class="project-link">View PRs ↗</span>
+                  <h3 class="project-name">Vinture</h3>
+                  <p class="project-desc">Building tools for modern venture capital and startup operations.</p>
+                  <div class="project-meta">
+                    <span class="project-role">Co-founder</span>
+                    <span class="project-status project-status-sunset">Sunset</span>
+                    <span class="project-type">Startup</span>
+                  </div>
+                  <!-- <span class="project-link">Learn more ↗</span> -->
                 </a>
               </div>
             </div>
           </div>
         </div>
 
-        <!-- Talks Section -->
-        <div class="section-block" data-section="talks">
-          <button class="section-header" aria-expanded="false" aria-controls="talks-content">
+        <!-- Media -->
+        <div class="section-block" data-section="media">
+          <button class="section-header" aria-expanded="false" aria-controls="media-content">
             <span class="section-shape">
               <svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor">
                 <circle cx="6" cy="6" r="5"/>
               </svg>
             </span>
-            <span class="section-title">Talks</span>
+            <span class="section-title">Media</span>
             <span class="section-icon">
               <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
                 <path d="M4 6L8 10L12 6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
               </svg>
             </span>
           </button>
-          <div class="section-content" id="talks-content">
+          <div class="section-content" id="media-content">
             <div class="section-inner">
-              <p class="section-subtitle">Sharing knowledge</p>
+              <p class="section-subtitle">Talks & articles</p>
               
               <div class="talks-list">
-                <article class="talk-item" data-graph-id="talk-algebraic-effects" data-graph-label="Redefining Stream Composition with Algebraic Effects" data-graph-subtitle="LambdaConf · Estes Park, CO">
+                <a href="https://www.youtube.com/watch?v=WcYKTyQwEA0" class="talk-item" target="_blank" rel="noopener" data-graph-id="talk-algebraic-effects" data-graph-label="Redefining Stream Composition with Algebraic Effects" data-graph-subtitle="LambdaConf · Estes Park, CO">
                   <time class="talk-date">May 2025</time>
                   <div class="talk-info">
                     <h3 class="talk-title">Redefining Stream Composition with Algebraic Effects</h3>
@@ -163,44 +191,32 @@
                     <p class="talk-abstract">
                         Algebraic effects offer a simpler, more modular way to think about streams by treating them as first-class effectful computations.
                     </p>
-                    <div class="talk-links">
-                      <!-- <a href="#" class="talk-link">Slides ↗</a> -->
-                      <a href="https://www.youtube.com/watch?v=WcYKTyQwEA0" class="talk-link">Video ↗</a>
-                    </div>
                   </div>
-                </article>
+                </a>
 
-                <article class="talk-item" data-graph-id="talk-kyo-effects" data-graph-label="Kyo: A New Approach to Functional Effects in Scala" data-graph-subtitle="Scala for Fun & Profit">
-                    <time class="talk-date">May 2025</time>
+                <a href="https://www.youtube.com/watch?v=uA2_TWP5WF4" class="talk-item" target="_blank" rel="noopener" data-graph-id="talk-kyo-effects" data-graph-label="Kyo: A New Approach to Functional Effects in Scala" data-graph-subtitle="Scala for Fun & Profit">
+                    <time class="talk-date">Feb 2025</time>
                     <div class="talk-info">
                     <h3 class="talk-title">Kyo: A New Approach to Functional Effects in Scala</h3>
-                    </h3>
-                    <p class="talk-venue">Scala for Fun & Profit<p>
+                    <p class="talk-venue">Scala for Fun & Profit</p>
                     <p class="talk-abstract">
                         Flavio Brasil and I demo Kyo's novel capabilities in functional programming.
                     </p>
-                    <div class="talk-links">
-                        <a href="https://www.youtube.com/watch?v=uA2_TWP5WF4" class="talk-link">Video ↗</a>
                     </div>
-                    </div>
-                </article>
+                </a>
 
-                <article class="talk-item" data-graph-id="talk-kyo-intro" data-graph-label="Building Robust Applications with Kyo: A Hands on Introduction" data-graph-subtitle="ScalaIO · Paris, France">
+                <a href="https://www.youtube.com/watch?v=QW8mAJr0Wso" class="talk-item" target="_blank" rel="noopener" data-graph-id="talk-kyo-intro" data-graph-label="Building Robust Applications with Kyo: A Hands on Introduction" data-graph-subtitle="ScalaIO · Paris, France">
                     <time class="talk-date">November 2024</time>
                     <div class="talk-info">
                     <h3 class="talk-title">Building Robust Applications with Kyo: A Hands on Introduction</h3>
-                    </h3>
-                    <p class="talk-venue">ScalaIO · Paris, France<p>
+                    <p class="talk-venue">ScalaIO · Paris, France</p>
                     <p class="talk-abstract">
                         A gentle introduction to Kyo, a novel functional effects system for Scala.
                     </p>
-                    <div class="talk-links">
-                        <a href="https://www.youtube.com/watch?v=QW8mAJr0Wso" class="talk-link">Video ↗</a>
                     </div>
-                    </div>
-                </article>
+                </a>
 
-                <article class="talk-item" data-graph-id="talk-structured-concurrency" data-graph-label="Comparing Approaches to Structured Concurrency" data-graph-subtitle="LambdaConf · Estes Park, CO">
+                <a href="https://www.youtube.com/watch?v=g6dyLhAublQ" class="talk-item" target="_blank" rel="noopener" data-graph-id="talk-structured-concurrency" data-graph-label="Comparing Approaches to Structured Concurrency" data-graph-subtitle="LambdaConf · Estes Park, CO">
                   <time class="talk-date">May 2024</time>
                   <div class="talk-info">
                     <h3 class="talk-title">Comparing Approaches to Structured Concurrency</h3>
@@ -208,17 +224,14 @@
                     <p class="talk-abstract">
                         James Ward and I compared various approaches to structured concurrency across languages, frameworks, and multi-dimensional realities.
                     </p>
-                    <div class="talk-links">
-                      <a href="https://www.youtube.com/watch?v=g6dyLhAublQ" class="talk-link">Video ↗</a>
-                    </div>
                   </div>
-                </article>
+                </a>
               </div>
             </div>
           </div>
         </div>
 
-        <!-- Contact Section -->
+        <!-- Links -->
         <div class="section-block" data-section="contact">
           <button class="section-header" aria-expanded="false" aria-controls="contact-content">
             <span class="section-shape">
@@ -242,19 +255,14 @@
                   <span class="contact-value">@hearnadam ↗</span>
                 </a>
                 
-                <a href="https://linkedin.com/in/adam-hearn" class="contact-item" target="_blank" rel="noopener" data-graph-id="contact-linkedin" data-graph-label="LinkedIn" data-graph-subtitle="/in/adam-hearn">
-                  <span class="contact-label">LinkedIn</span>
-                  <span class="contact-value">/in/adam-hearn ↗</span>
-                </a>
-                
                 <a href="https://x.com/adamhearn" class="contact-item" target="_blank" rel="noopener" data-graph-id="contact-x" data-graph-label="X" data-graph-subtitle="@adamhearn">
                   <span class="contact-label">X</span>
                   <span class="contact-value">@adamhearn ↗</span>
                 </a>
                 
-                <a href="mailto:adam@veak.co" class="contact-item" data-graph-id="contact-email" data-graph-label="Email" data-graph-subtitle="adam@veak.co">
-                  <span class="contact-label">Email</span>
-                  <span class="contact-value">adam@veak.co ↗</span>
+                <a href="https://linkedin.com/in/adam-hearn" class="contact-item" target="_blank" rel="noopener" data-graph-id="contact-linkedin" data-graph-label="LinkedIn" data-graph-subtitle="/in/adam-hearn">
+                  <span class="contact-label">LinkedIn</span>
+                  <span class="contact-value">/in/adam-hearn ↗</span>
                 </a>
               </div>
             </div>
@@ -263,6 +271,30 @@
 
       </nav>
     </main>
+  </div>
+
+  <!-- Controls Panel -->
+  <div class="controls-panel">
+    <button class="control-button" id="mute-toggle" aria-label="Toggle sound">
+      <span class="control-button-icon" id="mute-icon">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+          <path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+          <path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path>
+        </svg>
+      </span>
+      <span id="mute-label">Sound</span>
+    </button>
+    
+    <button class="control-button" id="theme-toggle" aria-label="Toggle theme">
+      <span class="control-button-icon" id="theme-icon">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <!-- Moon icon (shows in light mode) -->
+          <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+        </svg>
+      </span>
+      <span id="theme-label">Dark</span>
+    </button>
   </div>
 
   <!-- D3.js for custom graph -->
