@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Digital Garden</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:ital,wght@0,300;0,400;0,600;1,300;1,400&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="container">
+    <!-- Interactive Graph -->
+    <div id="graph-container"></div>
+    
+    <!-- Main Content -->
+    <main class="content">
+      <header class="header">
+        <div class="header-inner">
+          <h1 class="name">Adam Hearn</h1>
+          <p class="tagline">Software Magician</p>
+        </div>
+      </header>
+
+      <section class="intro">
+        <p class="intro-text">
+          I build software that scales. When I'm not shipping code, I'm contributing to 
+          open source projects and sharing knowledge through talks and writing.
+        </p>
+        <p class="intro-text secondary">
+          Drag and click the nodes to explore.
+        </p>
+      </section>
+
+      <!-- Expandable Sections -->
+      <nav class="sections" role="navigation" aria-label="Site sections">
+        
+        <!-- Work Section -->
+        <div class="section-block" data-section="work">
+          <button class="section-header" aria-expanded="false" aria-controls="work-content">
+            <span class="section-shape">
+              <svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor">
+                <rect x="1" y="1" width="10" height="10"/>
+              </svg>
+            </span>
+            <span class="section-title">Work</span>
+            <span class="section-icon">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                <path d="M4 6L8 10L12 6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </span>
+          </button>
+          <div class="section-content" id="work-content">
+            <div class="section-inner">
+              <p class="section-subtitle">Building systems at scale</p>
+              
+              <div class="work-item" data-graph-id="work-amazon" data-graph-label="Amazon" data-graph-subtitle="SWE · Present">
+                <span class="work-period">2022 — Present</span>
+                <h3 class="work-company">Amazon</h3>
+                <p class="work-role">Software Engineer</p>
+                <p class="work-description">
+                  Working on distributed systems and cloud infrastructure. 
+                  Building tools that power millions of customer experiences daily.
+                </p>
+              </div>
+              
+              <div class="work-item" data-graph-id="work-previous" data-graph-label="Previous Co" data-graph-subtitle="SWE · 2020">
+                <span class="work-period">Previous</span>
+                <h3 class="work-company">Your Previous Role</h3>
+                <p class="work-role">Software Engineer</p>
+                <p class="work-description">
+                  Add your previous experience here.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Open Source Section -->
+        <div class="section-block" data-section="opensource">
+          <button class="section-header" aria-expanded="false" aria-controls="opensource-content">
+            <span class="section-shape">
+              <svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor">
+                <polygon points="6,0 12,11 0,11"/>
+              </svg>
+            </span>
+            <span class="section-title">Open Source</span>
+            <span class="section-icon">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                <path d="M4 6L8 10L12 6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </span>
+          </button>
+          <div class="section-content" id="opensource-content">
+            <div class="section-inner">
+              <p class="section-subtitle">Contributing to the commons</p>
+              
+              <div class="project-grid">
+                <a href="#" class="project-card" data-graph-id="oss-project-name" data-graph-label="Project Name" data-graph-subtitle="Open source contribution">
+                  <span class="project-icon">
+                    <svg width="10" height="10" viewBox="0 0 12 12" fill="currentColor"><polygon points="6,0 12,11 0,11"/></svg>
+                  </span>
+                  <h3 class="project-name">Project Name</h3>
+                  <p class="project-desc">Brief description of your open source contribution or maintained project.</p>
+                  <span class="project-link">View on GitHub ↗</span>
+                </a>
+                
+                <a href="#" class="project-card" data-graph-id="oss-another" data-graph-label="Another Project" data-graph-subtitle="Another open source project">
+                  <span class="project-icon">
+                    <svg width="10" height="10" viewBox="0 0 12 12" fill="currentColor"><polygon points="6,0 12,11 0,11"/></svg>
+                  </span>
+                  <h3 class="project-name">Another Project</h3>
+                  <p class="project-desc">Another open source project you've contributed to or created.</p>
+                  <span class="project-link">View on GitHub ↗</span>
+                </a>
+                
+                <a href="#" class="project-card" data-graph-id="oss-contribution" data-graph-label="Contribution" data-graph-subtitle="Significant contribution">
+                  <span class="project-icon">
+                    <svg width="10" height="10" viewBox="0 0 12 12" fill="currentColor"><polygon points="6,0 12,11 0,11"/></svg>
+                  </span>
+                  <h3 class="project-name">Contribution</h3>
+                  <p class="project-desc">A significant contribution to an existing open source project.</p>
+                  <span class="project-link">View PR ↗</span>
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Talks Section -->
+        <div class="section-block" data-section="talks">
+          <button class="section-header" aria-expanded="false" aria-controls="talks-content">
+            <span class="section-shape">
+              <svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor">
+                <circle cx="6" cy="6" r="5"/>
+              </svg>
+            </span>
+            <span class="section-title">Talks</span>
+            <span class="section-icon">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                <path d="M4 6L8 10L12 6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </span>
+          </button>
+          <div class="section-content" id="talks-content">
+            <div class="section-inner">
+              <p class="section-subtitle">Sharing knowledge</p>
+              
+              <div class="talks-list">
+                <article class="talk-item" data-graph-id="talk-algebraic-effects" data-graph-label="Redefining Stream Composition with Algebraic Effects" data-graph-subtitle="LambdaConf · Estes Park, CO">
+                  <time class="talk-date">May 2025</time>
+                  <div class="talk-info">
+                    <h3 class="talk-title">Redefining Stream Composition with Algebraic Effects</h3>
+                    <p class="talk-venue">LambdaConf · Estes Park, CO</p>
+                    <p class="talk-abstract">
+                        Algebraic effects offer a simpler, more modular way to think about streams by treating them as first-class effectful computations.
+                    </p>
+                    <div class="talk-links">
+                      <!-- <a href="#" class="talk-link">Slides ↗</a> -->
+                      <a href="https://www.youtube.com/watch?v=WcYKTyQwEA0" class="talk-link">Video ↗</a>
+                    </div>
+                  </div>
+                </article>
+
+                <article class="talk-item" data-graph-id="talk-kyo-effects" data-graph-label="Kyo: A New Approach to Functional Effects in Scala" data-graph-subtitle="Scala for Fun & Profit">
+                    <time class="talk-date">May 2025</time>
+                    <div class="talk-info">
+                    <h3 class="talk-title">Kyo: A New Approach to Functional Effects in Scala</h3>
+                    </h3>
+                    <p class="talk-venue">Scala for Fun & Profit<p>
+                    <p class="talk-abstract">
+                        Flavio Brasil and I demo Kyo's novel capabilities in functional programming.
+                    </p>
+                    <div class="talk-links">
+                        <a href="https://www.youtube.com/watch?v=uA2_TWP5WF4" class="talk-link">Video ↗</a>
+                    </div>
+                    </div>
+                </article>
+
+                <article class="talk-item" data-graph-id="talk-kyo-intro" data-graph-label="Building Robust Applications with Kyo: A Hands on Introduction" data-graph-subtitle="ScalaIO · Paris, France">
+                    <time class="talk-date">November 2024</time>
+                    <div class="talk-info">
+                    <h3 class="talk-title">Building Robust Applications with Kyo: A Hands on Introduction</h3>
+                    </h3>
+                    <p class="talk-venue">ScalaIO · Paris, France<p>
+                    <p class="talk-abstract">
+                        A gentle introduction to Kyo, a novel functional effects system for Scala.
+                    </p>
+                    <div class="talk-links">
+                        <a href="https://www.youtube.com/watch?v=QW8mAJr0Wso" class="talk-link">Video ↗</a>
+                    </div>
+                    </div>
+                </article>
+
+                <article class="talk-item" data-graph-id="talk-structured-concurrency" data-graph-label="Comparing Approaches to Structured Concurrency" data-graph-subtitle="LambdaConf · Estes Park, CO">
+                  <time class="talk-date">May 2024</time>
+                  <div class="talk-info">
+                    <h3 class="talk-title">Comparing Approaches to Structured Concurrency</h3>
+                    <p class="talk-venue">LambdaConf · Estes Park, CO</p>
+                    <p class="talk-abstract">
+                        James Ward and I compared various approaches to structured concurrency across languages, frameworks, and multi-dimensional realities.
+                    </p>
+                    <div class="talk-links">
+                      <a href="https://www.youtube.com/watch?v=g6dyLhAublQ" class="talk-link">Video ↗</a>
+                    </div>
+                  </div>
+                </article>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Contact Section -->
+        <div class="section-block" data-section="contact">
+          <button class="section-header" aria-expanded="false" aria-controls="contact-content">
+            <span class="section-shape">
+              <svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor">
+                <polygon points="6,0 12,6 6,12 0,6"/>
+              </svg>
+            </span>
+            <span class="section-title">Contact</span>
+            <span class="section-icon">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                <path d="M4 6L8 10L12 6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </span>
+          </button>
+          <div class="section-content" id="contact-content">
+            <div class="section-inner">
+              
+              <div class="contact-links">
+                <a href="https://github.com/hearnadam" class="contact-item" target="_blank" rel="noopener" data-graph-id="contact-github" data-graph-label="GitHub" data-graph-subtitle="@hearnadam">
+                  <span class="contact-label">GitHub</span>
+                  <span class="contact-value">@hearnadam ↗</span>
+                </a>
+                
+                <a href="https://linkedin.com/in/adam-hearn" class="contact-item" target="_blank" rel="noopener" data-graph-id="contact-linkedin" data-graph-label="LinkedIn" data-graph-subtitle="/in/adam-hearn">
+                  <span class="contact-label">LinkedIn</span>
+                  <span class="contact-value">/in/adam-hearn ↗</span>
+                </a>
+                
+                <a href="https://x.com/adamhearn" class="contact-item" target="_blank" rel="noopener" data-graph-id="contact-x" data-graph-label="X" data-graph-subtitle="@adamhearn">
+                  <span class="contact-label">X</span>
+                  <span class="contact-value">@adamhearn ↗</span>
+                </a>
+                
+                <a href="mailto:adam@veak.co" class="contact-item" data-graph-id="contact-email" data-graph-label="Email" data-graph-subtitle="adam@veak.co">
+                  <span class="contact-label">Email</span>
+                  <span class="contact-value">adam@veak.co ↗</span>
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </nav>
+    </main>
+  </div>
+
+  <!-- D3.js for custom graph -->
+  <script src="https://d3js.org/d3.v7.min.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>
