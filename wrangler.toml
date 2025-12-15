@@ -1,0 +1,9 @@
+name = "me"
+compatibility_date = "2025-12-14"
+
+pages_build_output_dir = "."
+
+[env.production]
+routes = [
+  { pattern = "hearn.ai", custom_domain = true }
+]
