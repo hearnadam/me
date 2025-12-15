@@ -1,8 +1,3 @@
-/**
- * Custom SVG Knowledge Graph
- * Fluid hierarchical layout with interactive subgraph exploration
- */
-
 // ============================================
 // Sound & Haptic Feedback System
 // ============================================
@@ -11,7 +6,7 @@ class AudioFeedback {
   constructor() {
     this.context = null;
     this.enabled = true;
-    this.muted = false; // New muted state
+    this.muted = false;
     this.gainNode = null;
     this.masterVolume = 0.15; // Subtle volume
     this.dragOscillator = null;
@@ -21,16 +16,13 @@ class AudioFeedback {
 
   init() {
     try {
-      // Lazy initialization - only create when first used
       this.context = null;
       
-      // Load muted state from localStorage
       const savedMuteState = localStorage.getItem('soundMuted');
       if (savedMuteState !== null) {
         this.muted = savedMuteState === 'true';
       }
     } catch (e) {
-      console.log('Web Audio API not supported');
       this.enabled = false;
     }
   }
@@ -355,7 +347,6 @@ class HapticFeedback {
   }
 }
 
-// Initialize feedback systems
 const audioFeedback = new AudioFeedback();
 const hapticFeedback = new HapticFeedback();
 
@@ -674,12 +665,9 @@ function buildGraphData() {
           type: 'reference'
         });
         referenceLinksCount++;
-        console.log(`🔗 Manual link: "${node.label}" → "${targetNode.label}"`);
       }
     });
   });
-
-  console.log(`✨ Knowledge graph built: ${nodes.length} nodes, ${links.length} links (${referenceLinksCount} manual cross-references)`);
 
   return { nodes, links };
 }
@@ -1432,7 +1420,6 @@ function zoomToFit() {
     .call(svg.zoomBehavior.transform, transform);
 }
 
-// Called on each tick of the force simulation
 function ticked() {
   nodesGroup.selectAll('.node')
     .attr('transform', d => `translate(${d.x}, ${d.y})`);
@@ -1442,8 +1429,6 @@ function ticked() {
 }
 
 function updateNodePositions() {
-  // This function is now handled by the simulation's tick
-  // Keep it for manual updates if needed
   ticked();
 }
 
@@ -1751,16 +1736,11 @@ function updateMuteButton(muted) {
   }
 }
 
-// ============================================
-// Initialize
-// ============================================
-
 document.addEventListener('DOMContentLoaded', () => {
   initGraph();
   addSoundToElements();
   initCursor();
   
-  // Initialize mute button state
   updateMuteButton(audioFeedback.isMuted());
 });
 
@@ -2077,12 +2057,10 @@ function initCursor() {
     });
   }
 
-  // Default
   setColor(getVar('--accent-intro'));
   setPos(x, y);
 }
 
-// Initialize theme on load
 const initialTheme = getTheme();
 setTheme(initialTheme);
 
