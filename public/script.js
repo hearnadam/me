@@ -364,39 +364,37 @@ const hapticFeedback = new HapticFeedback();
 // ============================================
 
 const sectionConfig = {
-  work: { shape: 'square', itemSelector: '.work-item', color: '#3D5FA8' },
-  projects: { shape: 'triangle', itemSelector: '.project-card', color: '#347A5C' },
-  media: { shape: 'circle', itemSelector: '.talk-item', color: '#B35F2E' },
-  contact: { shape: 'diamond', itemSelector: '.contact-item', color: '#7D529A' }
+  work: { shape: 'square', itemSelector: '.work-item', colorVar: '--accent-work', fallbackColor: '#3D5FA8' },
+  projects: { shape: 'triangle', itemSelector: '.project-card', colorVar: '--accent-opensource', fallbackColor: '#347A5C' },
+  media: { shape: 'circle', itemSelector: '.talk-item', colorVar: '--accent-talks', fallbackColor: '#B35F2E' },
+  contact: { shape: 'diamond', itemSelector: '.contact-item', colorVar: '--accent-contact', fallbackColor: '#7D529A' }
 };
 
-// Color system that adapts to theme
-const COLORS = {
-  dark: {
-    node: '#A3AAA7',
-    nodeHover: '#E7E9E8',
-    center: '#1D7A84',
-    link: '#3a3f3d',       // Single neutral color for all links
-    linkHover: '#5a605d',
-    bg: '#0F1211'
-  },
-  light: {
-    node: '#5E6461',
-    nodeHover: '#1C1E1D',
-    center: '#0F4D56',
-    link: '#c5c8c6',       // Single neutral color for all links
-    linkHover: '#9a9d9b',
-    bg: '#F7F7F5'
-  }
+// Graph colors should match the page theme (single source of truth: CSS variables)
+const getCssVar = (name, fallback = '') => {
+  const v = getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+  return v || fallback;
 };
+
+function applyGraphThemeFromCss() {
+  NODE_COLOR = getCssVar('--text-secondary', NODE_COLOR);
+  NODE_COLOR_HOVER = getCssVar('--text-primary', NODE_COLOR_HOVER);
+  CENTER_COLOR = getCssVar('--accent-intro', CENTER_COLOR);
+  LINK_COLOR = getCssVar('--text-muted', LINK_COLOR);
+  LINK_COLOR_HOVER = getCssVar('--text-secondary', LINK_COLOR_HOVER);
+
+  // Keep a concrete color on config so buildGraphData can use it directly
+  Object.values(sectionConfig).forEach(cfg => {
+    cfg.color = cfg.colorVar ? getCssVar(cfg.colorVar, cfg.fallbackColor || cfg.color) : (cfg.color || cfg.fallbackColor);
+  });
+}
 
 // Current theme colors
-let NODE_COLOR = COLORS.dark.node;
-let NODE_COLOR_HOVER = COLORS.dark.nodeHover;
-let CENTER_COLOR = COLORS.dark.center;
-let LINK_COLOR = COLORS.dark.link;
-let LINK_COLOR_HOVER = COLORS.dark.linkHover;
-let GRAPH_BG = COLORS.dark.bg;
+let NODE_COLOR = '#A3AAA7';
+let NODE_COLOR_HOVER = '#E7E9E8';
+let CENTER_COLOR = '#1D7A84';
+let LINK_COLOR = '#3a3f3d';
+let LINK_COLOR_HOVER = '#5a605d';
 
 const domIndex = new Map();
 const nodeIndex = new Map(); // Map node IDs for manual cross-linking
@@ -798,8 +796,7 @@ function initGraph() {
   svg = d3.select(container)
     .append('svg')
     .attr('width', container.offsetWidth)
-    .attr('height', container.offsetHeight)
-    .style('background-color', GRAPH_BG);
+    .attr('height', container.offsetHeight);
 
   // Create main group for transformation (panning and zooming)
   g = svg.append('g').attr('class', 'graph-root');
@@ -1529,11 +1526,11 @@ tooltip.className = 'graph-tooltip';
 tooltip.style.cssText = `
   position: fixed;
   padding: 6px 10px;
-  background: rgba(15, 18, 17, 0.95);
-  border: 1px solid rgba(34, 39, 38, 0.8);
-  font-family: 'JetBrains Mono', monospace;
+  background: color-mix(in srgb, var(--bg-primary) 92%, transparent);
+  border: 1px solid color-mix(in srgb, var(--border-color) 80%, transparent);
+  font-family: var(--font-mono);
   font-size: 10px;
-  color: #A3AAA7;
+  color: var(--text-secondary);
   pointer-events: none;
   opacity: 0;
   transition: opacity 150ms ease;
@@ -1544,25 +1541,18 @@ tooltip.style.cssText = `
 `;
 document.body.appendChild(tooltip);
 
-function updateTooltipTheme(theme) {
-  if (theme === 'light') {
-    tooltip.style.background = 'rgba(247, 247, 245, 0.95)';
-    tooltip.style.borderColor = 'rgba(225, 228, 226, 0.8)';
-    tooltip.style.color = '#5E6461';
-  } else {
-    tooltip.style.background = 'rgba(15, 18, 17, 0.95)';
-    tooltip.style.borderColor = 'rgba(34, 39, 38, 0.8)';
-    tooltip.style.color = '#A3AAA7';
-  }
+function updateTooltipTheme() {
+  // No-op: tooltip styling follows CSS variables automatically.
 }
 
 function showTooltip(event, node) {
   if (!node || node.hidden) return;
 
-  const theme = document.documentElement.getAttribute('data-theme') || 'dark';
-  const colors = theme === 'light' 
-    ? { primary: '#1C1E1D', muted: '#7A7F7C', accent: '#5E6461' }
-    : { primary: '#E7E9E8', muted: '#6E7672', accent: '#A3AAA7' };
+  const colors = {
+    primary: getCssVar('--text-primary', '#E7E9E8'),
+    muted: getCssVar('--text-muted', '#6E7672'),
+    accent: getCssVar('--text-secondary', '#A3AAA7')
+  };
 
   if (node.type === 'center') {
     tooltip.innerHTML = `
@@ -1572,11 +1562,14 @@ function showTooltip(event, node) {
     // Check if this node has cross-references
     const relatedCats = getRelatedCategories(node);
     const hasRefs = relatedCats.length > 0;
+    const nodeAccent = (sectionConfig[node.category] && sectionConfig[node.category].colorVar)
+      ? getCssVar(sectionConfig[node.category].colorVar, colors.accent)
+      : colors.accent;
     
     tooltip.innerHTML = `
       <div style="color: ${colors.primary}; margin-bottom: 2px;">${node.label}</div>
       ${node.subtitle ? `<div style="color: ${colors.muted}; font-size: 9px;">${node.subtitle}</div>` : ''}
-      ${hasRefs ? `<div style="color: ${colors.accent}; font-size: 9px; margin-top: 2px;">↗ ${relatedCats.length} connection${relatedCats.length > 1 ? 's' : ''}</div>` : ''}
+      ${hasRefs ? `<div style="color: ${nodeAccent}; font-size: 9px; margin-top: 2px;">↗ ${relatedCats.length} connection${relatedCats.length > 1 ? 's' : ''}</div>` : ''}
     `;
   } else {
     tooltip.innerHTML = `
@@ -1798,22 +1791,9 @@ function setTheme(theme) {
   document.documentElement.setAttribute('data-theme', theme);
   localStorage.setItem('theme', theme);
   
-  // Update theme colors for graph
-  const colors = COLORS[theme];
-  NODE_COLOR = colors.node;
-  NODE_COLOR_HOVER = colors.nodeHover;
-  CENTER_COLOR = colors.center;
-  LINK_COLOR = colors.link;
-  LINK_COLOR_HOVER = colors.linkHover;
-  GRAPH_BG = colors.bg;
-  
-  // Update SVG background if it exists
-  if (svg) {
-    svg.style('background-color', GRAPH_BG);
-  }
-  
-  // Update tooltip theme
-  updateTooltipTheme(theme);
+  // Update graph theme from CSS variables (keeps graph + RHS in sync)
+  applyGraphThemeFromCss();
+  updateTooltipTheme();
   
   // Update toggle button
   updateThemeToggle(theme);
@@ -1826,10 +1806,14 @@ function setTheme(theme) {
       centerNode.color = CENTER_COLOR;
     }
     
-    // Update all item node colors
+    // Update all node colors
     graphData.nodes.forEach(node => {
       if (node.type === 'item') {
         node.color = NODE_COLOR;
+      }
+      if (node.type === 'category') {
+        const cfg = sectionConfig[node.category];
+        node.color = cfg?.colorVar ? getCssVar(cfg.colorVar, cfg.color) : (cfg?.color || node.color);
       }
     });
     

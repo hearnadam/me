@@ -58,20 +58,20 @@
 /* Light Mode - Manual class override takes precedence */
 [data-theme="light"] {
   /* Base Colors - Light Mode */
-  --bg-primary: #F7F7F5;
-  --bg-secondary: #EFEFED;
-  --bg-tertiary: #E1E4E2;
-  --text-primary: #1C1E1D;
-  --text-secondary: #5E6461;
-  --text-muted: #7A7F7C;
-  --border-color: #E1E4E2;
+  --bg-primary: #FCFCFB;
+  --bg-secondary: #F6F7F6;
+  --bg-tertiary: #EDF0EE;
+  --text-primary: #141615;
+  --text-secondary: #4B514F;
+  --text-muted: #737B77;
+  --border-color: #E2E7E4;
   
-  /* Section Accent Colors (Light Mode) - Darker */
-  --accent-intro: #0F4D56;     /* About Me - Darker Teal */
-  --accent-work: #19325A;       /* Work - Darker Indigo */
-  --accent-opensource: #1B4632; /* Open Source - Darker Forest */
-  --accent-talks: #8C4420;      /* Talks - Darker Burnt Copper */
-  --accent-contact: #482B56;    /* Contact - Darker Plum */
+  /* Section Accent Colors (Light Mode) - tuned to match dark mode hues without going "inky" */
+  --accent-intro: #2A8F98;      /* Teal (lighter, less inky) */
+  --accent-work: #4F73C0;       /* Indigo */
+  --accent-opensource: #4B8B6E; /* Forest */
+  --accent-talks: #C56E3B;      /* Copper */
+  --accent-contact: #8A63B3;    /* Plum */
 }
 
 /* System preference - observe but default to dark in JS */
