@@ -11,6 +11,7 @@ class AudioFeedback {
     this.masterVolume = 0.15; // Subtle volume
     this.dragOscillator = null;
     this.dragGainNode = null;
+    this._unlocked = false;
     this.init();
   }
 
@@ -27,8 +28,10 @@ class AudioFeedback {
     }
   }
 
-  ensureContext() {
-    if (!this.enabled || this.muted) return false;
+  ensureContext(options = {}) {
+    const { allowMuted = false } = options;
+    if (!this.enabled) return false;
+    if (this.muted && !allowMuted) return false;
     
     if (!this.context) {
       try {
@@ -44,9 +47,47 @@ class AudioFeedback {
     
     // Resume context if suspended (for autoplay policies)
     if (this.context.state === 'suspended') {
-      this.context.resume();
+      // Don't await here; unlock() (below) handles a reliable user-gesture resume path.
+      this.context.resume().catch(() => {});
     }
     
+    return true;
+  }
+
+  async unlock() {
+    // Mobile browsers require a user gesture to start WebAudio.
+    // We do this once, early (pointerdown/touchstart), so later hover/click sounds are reliable.
+    if (!this.enabled) return false;
+    if (this._unlocked && this.context && this.context.state === 'running') return true;
+
+    if (!this.ensureContext({ allowMuted: true })) return false;
+
+    try {
+      if (this.context.state !== 'running') {
+        await this.context.resume();
+      }
+    } catch (e) {
+      // Ignore; some browsers will refuse outside a gesture.
+    }
+
+    if (!this.context || this.context.state !== 'running') return false;
+
+    if (!this._unlocked) {
+      try {
+        // A near-silent tick to fully "warm up" audio on iOS Safari.
+        const osc = this.context.createOscillator();
+        const g = this.context.createGain();
+        g.gain.value = 0;
+        osc.connect(g);
+        g.connect(this.gainNode);
+        osc.start(this.context.currentTime);
+        osc.stop(this.context.currentTime + 0.01);
+      } catch (e) {
+        // Ignore
+      }
+      this._unlocked = true;
+    }
+
     return true;
   }
 
@@ -349,6 +390,25 @@ class HapticFeedback {
 
 const audioFeedback = new AudioFeedback();
 const hapticFeedback = new HapticFeedback();
+
+// One-time WebAudio unlock for mobile (must run on a real user gesture)
+(() => {
+  let didUnlock = false;
+  const handler = () => {
+    if (didUnlock) return;
+    didUnlock = true;
+    audioFeedback.unlock();
+    window.removeEventListener('pointerdown', handler, true);
+    window.removeEventListener('touchstart', handler, true);
+    window.removeEventListener('mousedown', handler, true);
+    window.removeEventListener('keydown', handler, true);
+  };
+
+  window.addEventListener('pointerdown', handler, { capture: true, passive: true });
+  window.addEventListener('touchstart', handler, { capture: true, passive: true });
+  window.addEventListener('mousedown', handler, { capture: true, passive: true });
+  window.addEventListener('keydown', handler, { capture: true });
+})();
 
 // ============================================
 // Graph Configuration
