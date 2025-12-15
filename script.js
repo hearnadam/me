@@ -14,6 +14,8 @@ class AudioFeedback {
     this.muted = false; // New muted state
     this.gainNode = null;
     this.masterVolume = 0.15; // Subtle volume
+    this.dragOscillator = null;
+    this.dragGainNode = null;
     this.init();
   }
 
@@ -221,6 +223,105 @@ class AudioFeedback {
       osc.start(startTime);
       osc.stop(startTime + 0.12);
     });
+  }
+
+  // Drag sound - warm continuous tone that plays during drag
+  startDrag() {
+    if (!this.ensureContext()) return;
+    
+    // Stop existing drag sound if any
+    this.stopDrag();
+    
+    // Create oscillators for a warm, rich tone
+    this.dragOscillator = this.context.createOscillator();
+    this.dragGainNode = this.context.createGain();
+    
+    // Add a second oscillator for warmth (perfect fifth interval)
+    const osc2 = this.context.createOscillator();
+    const gain2 = this.context.createGain();
+    
+    this.dragOscillator.connect(this.dragGainNode);
+    osc2.connect(gain2);
+    this.dragGainNode.connect(this.gainNode);
+    gain2.connect(this.gainNode);
+    
+    // Warm, low frequency (A2 note)
+    this.dragOscillator.frequency.value = 220;
+    this.dragOscillator.type = 'sine';
+    
+    // Second harmonic for richness (E3 - perfect fifth)
+    osc2.frequency.value = 330;
+    osc2.type = 'sine';
+    
+    // Very subtle, constant volume
+    this.dragGainNode.gain.setValueAtTime(0, this.context.currentTime);
+    this.dragGainNode.gain.linearRampToValueAtTime(0.12, this.context.currentTime + 0.05);
+    
+    gain2.gain.setValueAtTime(0, this.context.currentTime);
+    gain2.gain.linearRampToValueAtTime(0.06, this.context.currentTime + 0.05);
+    
+    this.dragOscillator.start(this.context.currentTime);
+    osc2.start(this.context.currentTime);
+    
+    // Store second oscillator for cleanup
+    this.dragOscillator2 = osc2;
+    this.dragGainNode2 = gain2;
+    this.dragBaseFreq = 220;
+    this.dragBaseFreq2 = 330;
+  }
+  
+  // Update drag sound based on velocity - creates oscillation effect
+  updateDrag(velocity) {
+    if (!this.dragOscillator || !this.ensureContext()) return;
+    
+    // Modulate frequency based on movement speed (creates warm oscillation)
+    // Map velocity (0-20 typical range) to frequency modulation
+    const modulationAmount = Math.min(velocity * 3, 100); // Max +100Hz
+    const targetFreq = this.dragBaseFreq + modulationAmount;
+    const targetFreq2 = this.dragBaseFreq2 + modulationAmount * 1.5;
+    
+    const now = this.context.currentTime;
+    
+    // Smooth frequency transition for warm oscillation
+    this.dragOscillator.frequency.cancelScheduledValues(now);
+    this.dragOscillator.frequency.setValueAtTime(this.dragOscillator.frequency.value, now);
+    this.dragOscillator.frequency.linearRampToValueAtTime(targetFreq, now + 0.08);
+    
+    if (this.dragOscillator2) {
+      this.dragOscillator2.frequency.cancelScheduledValues(now);
+      this.dragOscillator2.frequency.setValueAtTime(this.dragOscillator2.frequency.value, now);
+      this.dragOscillator2.frequency.linearRampToValueAtTime(targetFreq2, now + 0.08);
+    }
+  }
+  
+  stopDrag() {
+    if (!this.dragOscillator) return;
+    
+    try {
+      // Fade out smoothly
+      const now = this.context.currentTime;
+      this.dragGainNode.gain.cancelScheduledValues(now);
+      this.dragGainNode.gain.setValueAtTime(this.dragGainNode.gain.value, now);
+      this.dragGainNode.gain.linearRampToValueAtTime(0.01, now + 0.08);
+      
+      if (this.dragGainNode2) {
+        this.dragGainNode2.gain.cancelScheduledValues(now);
+        this.dragGainNode2.gain.setValueAtTime(this.dragGainNode2.gain.value, now);
+        this.dragGainNode2.gain.linearRampToValueAtTime(0.01, now + 0.08);
+      }
+      
+      this.dragOscillator.stop(now + 0.1);
+      if (this.dragOscillator2) {
+        this.dragOscillator2.stop(now + 0.1);
+      }
+    } catch (e) {
+      // Oscillator might already be stopped
+    }
+    
+    this.dragOscillator = null;
+    this.dragGainNode = null;
+    this.dragOscillator2 = null;
+    this.dragGainNode2 = null;
   }
 }
 
@@ -435,6 +536,22 @@ function createShape(shape, size, color) {
       group.appendChild(diamond);
       break;
 
+    case 'tilde':
+      // Create a ~ (tilde) shape using a path
+      const tilde = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+      const scale = size / 4;
+      // Tilde shape: smooth wave with two peaks
+      const d = `M ${-size * 1.2},${-size * 0.3} 
+                 Q ${-size * 0.6},${-size * 0.8} ${-size * 0.1},${-size * 0.3}
+                 Q ${size * 0.4},${size * 0.2} ${size * 1.2},${size * 0.3}`;
+      tilde.setAttribute('d', d);
+      tilde.setAttribute('stroke', color);
+      tilde.setAttribute('stroke-width', size * 0.8);
+      tilde.setAttribute('stroke-linecap', 'round');
+      tilde.setAttribute('fill', 'none');
+      group.appendChild(tilde);
+      break;
+
     default:
       const defaultCircle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
       defaultCircle.setAttribute('r', size);
@@ -467,7 +584,7 @@ function buildGraphData() {
     type: 'center',
     category: null,
     color: CENTER_COLOR,
-    shape: 'circle',
+    shape: 'tilde',
     size: CENTER_SIZE,
     x: centerX,
     y: centerY,
@@ -839,6 +956,11 @@ function renderGraph() {
   // No labels - removed per requirements
 
   // Drag behavior with clickDistance to distinguish from clicks
+  let dragStartPos = null;
+  let wasDragged = false;
+  let lastDragPos = null;
+  let lastDragTime = null;
+  
   const drag = d3.drag()
     .clickDistance(4)
     .on('start', function(event, d) {
@@ -846,10 +968,41 @@ function renderGraph() {
       d3.select(this).style('cursor', 'grabbing');
       d.fx = d.x;
       d.fy = d.y;
+      // Track start position to detect actual drag
+      dragStartPos = { x: event.x, y: event.y };
+      lastDragPos = { x: event.x, y: event.y };
+      lastDragTime = Date.now();
+      wasDragged = false;
     })
     .on('drag', function(event, d) {
       d.fx = event.x;
       d.fy = event.y;
+      // Check if we've actually moved
+      if (dragStartPos) {
+        const dx = event.x - dragStartPos.x;
+        const dy = event.y - dragStartPos.y;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+        if (distance > 5 && !wasDragged) {
+          wasDragged = true;
+          // Start continuous warm drag sound
+          audioFeedback.startDrag();
+        }
+        
+        // Calculate velocity for sound modulation
+        if (wasDragged && lastDragPos && lastDragTime) {
+          const now = Date.now();
+          const dt = Math.max(now - lastDragTime, 1);
+          const vx = (event.x - lastDragPos.x) / dt;
+          const vy = (event.y - lastDragPos.y) / dt;
+          const velocity = Math.sqrt(vx * vx + vy * vy) * 100; // Scale up for audible effect
+          
+          // Update sound based on velocity
+          audioFeedback.updateDrag(velocity);
+          
+          lastDragPos = { x: event.x, y: event.y };
+          lastDragTime = now;
+        }
+      }
     })
     .on('end', function(event, d) {
       if (!event.active) simulation.alphaTarget(0);
@@ -858,6 +1011,11 @@ function renderGraph() {
         d.fx = null;
         d.fy = null;
       }
+      // Stop drag sound
+      audioFeedback.stopDrag();
+      dragStartPos = null;
+      lastDragPos = null;
+      lastDragTime = null;
     });
 
   nodeElements.call(drag);
@@ -945,6 +1103,12 @@ function renderGraph() {
     .on('click', function(event, d) {
       event.stopPropagation();
       
+      // Don't trigger click if node was dragged
+      if (wasDragged) {
+        wasDragged = false;
+        return;
+      }
+      
       // Play click sound
       audioFeedback.playClick();
       hapticFeedback.medium();
@@ -963,52 +1127,33 @@ function renderGraph() {
           }
         }, 450);
       } else if (d.type === 'item') {
-        // Get the DOM element for this item
+        // Expand sections and show cross-references
         const el = domIndex.get(d.id);
         
-        // Check if element is a link with href
-        if (el && el.hasAttribute('href')) {
-          const href = el.getAttribute('href');
-          const isExternal = el.getAttribute('target') === '_blank';
-          
-          if (isExternal) {
-            // Play goodbye sound and open external link
-            audioFeedback.playBye();
-            hapticFeedback.pattern([10, 30, 10]);
-            setTimeout(() => {
-              window.open(href, '_blank', 'noopener,noreferrer');
-            }, 100);
-          } else {
-            // Internal link - just navigate
-            window.location.href = href;
-          }
-        } else {
-          // Not a link - expand sections and scroll to item
-          // Find all categories that contain nodes referenced by or referencing this node
-          const relatedCategories = getRelatedCategories(d);
-          
-          // Expand this node's category
-          toggleSection(d.category, true);
-          
-          // Expand all related categories to show cross-references
-          relatedCategories.forEach(catKey => {
-            toggleSection(catKey, true);
-          });
-          
-          // Show all related subgraphs
-          showMultipleSubgraphs([d.category, ...relatedCategories]);
-          
-          // Recenter graph to show all visible nodes (wait for nodes to appear)
+        // Find all categories that contain nodes referenced by or referencing this node
+        const relatedCategories = getRelatedCategories(d);
+        
+        // Expand this node's category
+        toggleSection(d.category, true);
+        
+        // Expand all related categories to show cross-references
+        relatedCategories.forEach(catKey => {
+          toggleSection(catKey, true);
+        });
+        
+        // Show all related subgraphs
+        showMultipleSubgraphs([d.category, ...relatedCategories]);
+        
+        // Recenter graph to show all visible nodes (wait for nodes to appear)
+        setTimeout(() => {
+          zoomToVisibleNodes();
+        }, 450);
+        
+        // Scroll to the clicked item
+        if (el) {
           setTimeout(() => {
-            zoomToVisibleNodes();
-          }, 450);
-          
-          // Scroll to the clicked item
-          if (el) {
-            setTimeout(() => {
-              el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            }, 100);
-          }
+            el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          }, 100);
         }
       } else if (d.type === 'center') {
         // Clicking center opens the about me section and shuffles the graph
