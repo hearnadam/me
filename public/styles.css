@@ -539,6 +539,7 @@ html.cursor-enabled #cursor.is-down {
   color: var(--text-secondary);
   text-decoration: underline;
   transition: color var(--transition-fast);
+  font-variant-emoji: unicode;
 }
 
 .work-join-link:hover {
@@ -602,6 +603,7 @@ html.cursor-enabled #cursor.is-down {
   font-size: 0.6875rem;
   color: var(--accent-opensource);
   letter-spacing: 0.05em;
+  font-variant-emoji: unicode;
 }
 
 .project-meta {
@@ -755,6 +757,7 @@ html.cursor-enabled #cursor.is-down {
   font-size: 0.9375rem;
   color: var(--text-secondary);
   transition: color var(--transition-fast);
+  font-variant-emoji: unicode;
 }
 
 .contact-item:hover .contact-value {
@@ -850,6 +853,7 @@ html.cursor-enabled #cursor.is-down {
 .graph-tooltip {
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
+  font-variant-emoji: unicode;
 }
 
 /* Clean link styling - curved paths with subtle presence */
