@@ -941,7 +941,6 @@ function renderGraph() {
     .attr('class', d => `node node-${d.type}${d.hidden ? ' node-hidden' : ''}`)
     .attr('data-id', d => d.id)
     .attr('transform', d => `translate(${d.x}, ${d.y})`)
-    .style('cursor', 'grab')
     .style('opacity', d => d.hidden ? 0 : 1);
 
   // Add shapes to nodes
@@ -963,7 +962,6 @@ function renderGraph() {
     .clickDistance(4)
     .on('start', function(event, d) {
       if (!event.active) simulation.alphaTarget(0.2).restart();
-      d3.select(this).style('cursor', 'grabbing');
       d.fx = d.x;
       d.fy = d.y;
       // Track start position to detect actual drag
@@ -1004,7 +1002,6 @@ function renderGraph() {
     })
     .on('end', function(event, d) {
       if (!event.active) simulation.alphaTarget(0);
-      d3.select(this).style('cursor', 'grab');
       if (d.type !== 'center') {
         d.fx = null;
         d.fy = null;
@@ -1768,6 +1765,7 @@ function updateMuteButton(muted) {
 document.addEventListener('DOMContentLoaded', () => {
   initGraph();
   addSoundToElements();
+  initCursor();
   
   // Initialize mute button state
   updateMuteButton(audioFeedback.isMuted());
@@ -1884,6 +1882,220 @@ function updateThemeToggle(theme) {
     `;
     label.textContent = 'Light';
   }
+}
+
+// ============================================
+// Cursor
+// ============================================
+
+function initCursor() {
+  const cursor = document.getElementById('cursor');
+  if (!cursor) return;
+
+  const root = document.documentElement;
+  const prefersReducedMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  const finePointerQuery = window.matchMedia ? window.matchMedia('(hover: hover) and (pointer: fine)') : null;
+  const isFinePointer = () => (finePointerQuery ? finePointerQuery.matches : true);
+
+  if (!isFinePointer()) return; // keep default cursor on touch / coarse pointers
+
+  root.classList.add('cursor-enabled');
+  // Some browsers can briefly "flash" a native cursor on mousedown over certain controls/SVG.
+  // Setting it inline with !important hardens against those cases.
+  root.style.setProperty('cursor', 'none', 'important');
+  if (document.body) document.body.style.setProperty('cursor', 'none', 'important');
+
+  let targetX = window.innerWidth / 2;
+  let targetY = window.innerHeight / 2;
+  let x = targetX;
+  let y = targetY;
+
+  let rafId = null;
+  let settleFrames = 0;
+
+  const setPos = (nx, ny) => {
+    cursor.style.setProperty('--cursor-x', `${nx}px`);
+    cursor.style.setProperty('--cursor-y', `${ny}px`);
+  };
+
+  const tick = () => {
+    const dx = targetX - x;
+    const dy = targetY - y;
+    const dist = Math.hypot(dx, dy);
+
+    // Faster catch-up for big moves, snappier overall feel.
+    const ease = dist > 60 ? 0.42 : 0.28;
+    x += dx * ease;
+    y += dy * ease;
+    setPos(x, y);
+
+    // Stop the loop when we've effectively caught up (saves CPU and feels less "laggy").
+    if (dist < 0.2) {
+      settleFrames += 1;
+      if (settleFrames > 8) {
+        rafId = null;
+        return;
+      }
+    } else {
+      settleFrames = 0;
+    }
+
+    rafId = window.requestAnimationFrame(tick);
+  };
+
+  const start = () => {
+    if (prefersReducedMotion) return;
+    if (rafId != null) return;
+    rafId = window.requestAnimationFrame(tick);
+  };
+
+  const stop = () => {
+    if (rafId == null) return;
+    window.cancelAnimationFrame(rafId);
+    rafId = null;
+  };
+
+  const getVar = (name) => getComputedStyle(root).getPropertyValue(name).trim();
+  const setColor = (cssColor) => {
+    if (cssColor) cursor.style.setProperty('--cursor-color', cssColor);
+  };
+
+  const setColorFromElement = (el) => {
+    if (!el) return;
+
+    const sectionBlock = el.closest && el.closest('.section-block');
+    if (sectionBlock) {
+      const accent = getComputedStyle(sectionBlock).getPropertyValue('--section-accent').trim();
+      if (accent) return setColor(accent);
+    }
+
+    if (el.closest && el.closest('.work-item')) return setColor(getVar('--accent-work'));
+    if (el.closest && el.closest('.project-card')) return setColor(getVar('--accent-opensource'));
+    if (el.closest && el.closest('.talk-item')) return setColor(getVar('--accent-talks'));
+    if (el.closest && el.closest('.contact-item')) return setColor(getVar('--accent-contact'));
+
+    return setColor(getVar('--accent-intro'));
+  };
+
+  const interactiveSelector = [
+    'a[href]',
+    'button',
+    '[role="button"]',
+    'input',
+    'select',
+    'textarea',
+    'summary',
+    '.section-header',
+    '.work-item',
+    '.project-card',
+    '.talk-item',
+    '.contact-item',
+    '.control-button',
+    '#graph-container svg'
+  ].join(',');
+
+  const isInteractive = (el) => !!(el && el.closest && el.closest(interactiveSelector));
+  const forceHideNativeCursor = (el) => {
+    // Apply to target and nearest interactive ancestor, plus root/body.
+    try {
+      root.style.setProperty('cursor', 'none', 'important');
+      if (document.body) document.body.style.setProperty('cursor', 'none', 'important');
+      const target = el && el.nodeType === 1 ? el : null;
+      const interactive = target && target.closest ? target.closest(interactiveSelector) : null;
+      if (target) target.style.setProperty('cursor', 'none', 'important');
+      if (interactive) interactive.style.setProperty('cursor', 'none', 'important');
+    } catch (_) {
+      // ignore
+    }
+  };
+
+  window.addEventListener(
+    'pointermove',
+    (e) => {
+      if (e.pointerType && e.pointerType !== 'mouse' && e.pointerType !== 'pen') return;
+      targetX = e.clientX;
+      targetY = e.clientY;
+      forceHideNativeCursor(e.target);
+
+      if (prefersReducedMotion) {
+        x = targetX;
+        y = targetY;
+        setPos(x, y);
+      } else {
+        start();
+      }
+    },
+    { passive: true }
+  );
+
+  window.addEventListener(
+    'pointerdown',
+    (e) => {
+      if (e.pointerType && e.pointerType !== 'mouse' && e.pointerType !== 'pen') return;
+      cursor.classList.add('is-down');
+      forceHideNativeCursor(e.target);
+    },
+    { passive: true }
+  );
+
+  window.addEventListener(
+    'pointerup',
+    (e) => {
+      if (e.pointerType && e.pointerType !== 'mouse' && e.pointerType !== 'pen') return;
+      cursor.classList.remove('is-down');
+    },
+    { passive: true }
+  );
+
+  document.addEventListener(
+    'pointerover',
+    (e) => {
+      const el = e.target;
+      if (!isInteractive(el)) return;
+      cursor.classList.add('is-hovering');
+      setColorFromElement(el);
+    },
+    { passive: true }
+  );
+
+  document.addEventListener(
+    'pointerout',
+    (e) => {
+      const el = e.target;
+      if (!isInteractive(el)) return;
+      // If we're leaving an interactive element but still over another interactive element, keep hovering.
+      const next = e.relatedTarget;
+      if (next && isInteractive(next)) {
+        setColorFromElement(next);
+        return;
+      }
+      cursor.classList.remove('is-hovering');
+      setColor(getVar('--accent-intro'));
+    },
+    { passive: true }
+  );
+
+  window.addEventListener('blur', () => {
+    cursor.classList.remove('is-hovering');
+    cursor.classList.remove('is-down');
+  });
+
+  // React to pointer capability changes (e.g., docking/undocking)
+  if (finePointerQuery && finePointerQuery.addEventListener) {
+    finePointerQuery.addEventListener('change', () => {
+      if (!isFinePointer()) {
+        root.classList.remove('cursor-enabled');
+        stop();
+      } else {
+        root.classList.add('cursor-enabled');
+      }
+    });
+  }
+
+  // Default
+  setColor(getVar('--accent-intro'));
+  setPos(x, y);
 }
 
 // Initialize theme on load

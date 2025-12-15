@@ -104,6 +104,126 @@ body {
 }
 
 /* ============================================
+   Cursor
+   ============================================ */
+html.cursor-enabled,
+html.cursor-enabled * {
+  cursor: none !important;
+}
+
+#cursor {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 18px;
+  height: 18px;
+  border-radius: 999px;
+  pointer-events: none;
+  z-index: 99999;
+  opacity: 0;
+  transform: translate3d(
+      calc(var(--cursor-x, -9999px) - 9px),
+      calc(var(--cursor-y, -9999px) - 9px),
+      0
+    )
+    scale(var(--cursor-scale, 1));
+  transition: opacity 160ms ease;
+
+  --cursor-color: var(--accent-intro);
+  --cursor-scale: 1;
+  --cursor-alpha: 0.95;
+
+  contain: layout paint;
+
+  /* Core */
+  background:
+    radial-gradient(
+      circle at 35% 35%,
+      color-mix(in srgb, white 30%, var(--cursor-color)) 0%,
+      color-mix(in srgb, white 8%, var(--cursor-color)) 30%,
+      color-mix(in srgb, var(--cursor-color) 72%, transparent) 64%,
+      transparent 72%
+    );
+  filter: saturate(1.15);
+  mix-blend-mode: screen;
+  will-change: transform, opacity;
+}
+
+#cursor::before {
+  content: "";
+  position: absolute;
+  inset: -14px;
+  border-radius: inherit;
+  background:
+    radial-gradient(
+      circle,
+      color-mix(in srgb, var(--cursor-color) 70%, transparent) 0%,
+      transparent 65%
+    );
+  filter: blur(9px);
+  opacity: calc(var(--cursor-alpha) * 0.55);
+}
+
+#cursor::after {
+  content: "";
+  position: absolute;
+  inset: -26px;
+  border-radius: inherit;
+  background:
+    radial-gradient(
+      circle,
+      color-mix(in srgb, var(--cursor-color) 40%, transparent) 0%,
+      transparent 70%
+    );
+  filter: blur(14px);
+  opacity: calc(var(--cursor-alpha) * 0.3);
+}
+
+html.cursor-enabled #cursor {
+  opacity: 1;
+}
+
+html.cursor-enabled #cursor.is-hovering {
+  --cursor-scale: 1.38;
+  --cursor-alpha: 1;
+}
+
+html.cursor-enabled #cursor.is-down {
+  --cursor-scale: 0.92;
+  --cursor-alpha: 1;
+}
+
+/* Light mode: avoid "screen" washout; add a crisp ring for contrast */
+[data-theme="light"] #cursor {
+  mix-blend-mode: normal;
+  filter: saturate(1.1) contrast(1.05);
+  background:
+    radial-gradient(
+      circle at 35% 35%,
+      color-mix(in srgb, white 20%, var(--cursor-color)) 0%,
+      color-mix(in srgb, var(--cursor-color) 60%, transparent) 55%,
+      transparent 72%
+    );
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--cursor-color) 55%, var(--bg-primary)),
+    0 0 18px color-mix(in srgb, var(--cursor-color) 35%, transparent);
+}
+
+[data-theme="light"] #cursor::before {
+  opacity: calc(var(--cursor-alpha) * 0.45);
+}
+
+[data-theme="light"] #cursor::after {
+  opacity: calc(var(--cursor-alpha) * 0.18);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html.cursor-enabled #cursor {
+    transition: none;
+  }
+}
+
+/* ============================================
    Layout
    ============================================ */
 .container {
