@@ -101,6 +101,7 @@ body {
   overflow-x: hidden;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  font-variant-emoji: unicode;
 }
 
 /* ============================================
@@ -733,6 +734,7 @@ html.cursor-enabled #cursor.is-down {
   border: 1px dotted transparent;
   text-decoration: none;
   transition: all var(--transition-base);
+  font-variant-emoji: unicode;
 }
 
 .contact-item:hover {
