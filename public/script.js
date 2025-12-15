@@ -537,16 +537,14 @@ function createShape(shape, size, color) {
       break;
 
     case 'tilde':
-      // Create a ~ (tilde) shape using a path
+      // Create a ~ (tilde) shape using a path - balanced S-curve
       const tilde = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-      const scale = size / 4;
-      // Tilde shape: smooth wave with two peaks
-      const d = `M ${-size * 1.2},${-size * 0.3} 
-                 Q ${-size * 0.6},${-size * 0.8} ${-size * 0.1},${-size * 0.3}
-                 Q ${size * 0.4},${size * 0.2} ${size * 1.2},${size * 0.3}`;
+      // Symmetric tilde matching the HTML icon style
+      const w = size * 1.2;
+      const d = `M ${-w} ${size * 0.4} C ${-w * 0.5} ${-size * 0.6} ${-w * 0.3} ${-size * 0.6} 0 0 C ${w * 0.3} ${size * 0.6} ${w * 0.5} ${size * 0.6} ${w} ${-size * 0.4}`;
       tilde.setAttribute('d', d);
       tilde.setAttribute('stroke', color);
-      tilde.setAttribute('stroke-width', size * 0.8);
+      tilde.setAttribute('stroke-width', size * 0.6);
       tilde.setAttribute('stroke-linecap', 'round');
       tilde.setAttribute('fill', 'none');
       group.appendChild(tilde);
