@@ -325,10 +325,13 @@ const audioFeedback = new AudioFeedback();
 
 const sectionConfig = {
   work: { shape: 'square', itemSelector: '.work-item', colorVar: '--accent-work', fallbackColor: '#3D5FA8' },
-  projects: { shape: 'triangle', itemSelector: '.project-card', colorVar: '--accent-opensource', fallbackColor: '#347A5C' },
+  projects: { shape: 'triangle', itemSelector: '.project-block', contributionSelector: '.contribution-item', colorVar: '--accent-opensource', fallbackColor: '#347A5C' },
   media: { shape: 'circle', itemSelector: '.talk-item', colorVar: '--accent-talks', fallbackColor: '#B35F2E' },
   contact: { shape: 'diamond', itemSelector: '.contact-item', colorVar: '--accent-contact', fallbackColor: '#7D529A' }
 };
+
+// Track active project expansion
+let activeProject = null;
 
 // Graph colors should match the page theme (single source of truth: CSS variables)
 const getCssVar = (name, fallback = '') => {
@@ -376,15 +379,17 @@ const CENTER_SIZE = 8;
 const CATEGORY_SIZE = 14;
 const ITEM_SIZE = 6;
 
-// Force simulation parameters - tuned for soft, gentle movement
+// Force simulation parameters - heavy, stable physics with smooth elastic motion
 const FORCE_PARAMS = {
   linkDistance: 120,        // Spring rest length
-  linkStrength: 0.3,        // Spring stiffness (lower = softer/more elastic)
-  chargeStrength: -250,     // Node repulsion (gentler)
+  linkStrength: 0.4,        // Spring stiffness (stronger for more elastic feel)
+  chargeStrength: -250,     // Node repulsion (stronger outward push = "heavy" feel)
   chargeDistance: 300,      // Max distance for repulsion
-  collideRadius: 30,        // Collision radius
-  centerStrength: 0.02,     // Pull toward center (very gentle)
-  velocityDecay: 0.4        // Friction/damping (higher = less bouncy, softer settling)
+  collideRadius: 40,        // Collision radius (larger = more spacing)
+  centerStrength: 0.02,     // Pull toward center (lower = nodes stay out more)
+  velocityDecay: 0.7,       // Friction/damping (higher = less shaky, settles faster)
+  alphaDecay: 0.05,         // How fast simulation cools (higher = stops sooner, less jitter)
+  alphaMin: 0.001           // Minimum alpha before simulation stops
 };
 
 // ============================================
@@ -421,7 +426,7 @@ function collectItemData(sectionKey, itemEl, fallbackIdx) {
 
 function highlightDomItem(node) {
   domIndex.forEach(el => el.classList.remove('is-graph-highlight'));
-  if (!node || node.type !== 'item') return;
+  if (!node || (node.type !== 'item' && node.type !== 'contribution')) return;
 
   const el = domIndex.get(node.id);
   if (el) {
@@ -610,6 +615,54 @@ function buildGraphData() {
         target: node.id,
         type: 'branch'
       });
+
+      // For projects, also create contribution nodes
+      if (catKey === 'projects' && config.contributionSelector) {
+        const projectId = itemEl.dataset.project;
+        const contributions = itemEl.querySelectorAll(config.contributionSelector);
+
+        contributions.forEach((contribEl, contribIdx) => {
+          const contribId = contribEl.dataset.graphId || `contrib-${projectId}-${contribIdx}`;
+          const contribLabel = contribEl.dataset.graphLabel || contribEl.querySelector('.contrib-title')?.textContent?.trim() || '';
+          const contribSubtitle = contribEl.dataset.graphSubtitle || contribEl.querySelector('.contrib-detail')?.textContent?.trim() || '';
+
+          contribEl.dataset.graphId = contribId;
+
+          // Position contributions near their parent project
+          const contribSpread = 40;
+          const contribX = itemX + (Math.random() - 0.5) * contribSpread;
+          const contribY = itemY + (Math.random() - 0.5) * contribSpread;
+
+          const contribNode = {
+            id: contribId,
+            label: contribLabel,
+            subtitle: contribSubtitle,
+            type: 'contribution',
+            category: catKey,
+            parentProject: projectId,
+            parentNodeId: node.id,  // Reference to parent project node
+            color: config.color,
+            shape: 'circle',
+            size: ITEM_SIZE * 0.7,  // Smaller than regular items
+            x: itemX,  // Start at parent position
+            y: itemY,
+            fx: itemX,  // Fixed position when hidden (prevents floating)
+            fy: itemY,
+            hidden: true  // Contributions hidden by default
+          };
+
+          nodes.push(contribNode);
+          domIndex.set(contribId, contribEl);
+          nodeIndex.set(contribId, contribNode);
+
+          // Link contribution to project
+          links.push({
+            source: node.id,
+            target: contribId,
+            type: 'detail'
+          });
+        });
+      }
     });
   });
 
@@ -736,6 +789,221 @@ window.addEventListener('hashchange', () => {
 });
 
 // ============================================
+// Unified Graph Visibility
+// ============================================
+
+// Single source of truth for what's visible in the graph
+// Based on: activeSubgraph (which category is expanded) and activeProject (which project shows contributions)
+function updateGraphVisibility(animate = true) {
+  if (!graphData || !simulation || !nodesGroup || !linksGroup) return;
+
+  const duration = animate ? 300 : 0;
+
+  // Update node visibility based on state
+  graphData.nodes.forEach(node => {
+    if (node.type === 'center' || node.type === 'category') {
+      // Always visible
+      node.hidden = false;
+    } else if (node.type === 'item') {
+      // Visible only if its category subgraph is active
+      node.hidden = !activeSubgraph || node.category !== activeSubgraph;
+    } else if (node.type === 'contribution') {
+      // Visible only if parent project is expanded AND projects subgraph is active
+      node.hidden = !activeProject || node.parentProject !== activeProject || activeSubgraph !== 'projects';
+
+      // Fix position when hidden, release when visible
+      if (node.hidden) {
+        const parentNode = graphData.nodes.find(n => n.id === node.parentNodeId);
+        if (parentNode) {
+          node.fx = parentNode.x || 0;
+          node.fy = parentNode.y || 0;
+        }
+      } else {
+        // Release and position around parent
+        const parentNode = graphData.nodes.find(n => n.id === node.parentNodeId);
+        if (parentNode && node.fx !== null) {
+          const angle = Math.random() * Math.PI * 2;
+          const distance = 30 + Math.random() * 40;
+          node.x = parentNode.x + Math.cos(angle) * distance;
+          node.y = parentNode.y + Math.sin(angle) * distance;
+          node.fx = null;
+          node.fy = null;
+        }
+      }
+    }
+  });
+
+  // Update node DOM
+  nodesGroup.selectAll('.node-item, .node-contribution')
+    .transition()
+    .duration(duration)
+    .style('opacity', d => d.hidden ? 0 : 1)
+    .style('pointer-events', d => d.hidden ? 'none' : 'auto');
+
+  // Update link visibility
+  linksGroup.selectAll('.link-branch')
+    .transition()
+    .duration(duration)
+    .attr('stroke-opacity', d => {
+      const targetNode = typeof d.target === 'object' ? d.target : graphData.nodes.find(n => n.id === d.target);
+      return targetNode && !targetNode.hidden ? 0.4 : 0;
+    });
+
+  linksGroup.selectAll('.link-detail')
+    .transition()
+    .duration(duration)
+    .attr('stroke-opacity', d => {
+      const targetNode = typeof d.target === 'object' ? d.target : graphData.nodes.find(n => n.id === d.target);
+      return targetNode && !targetNode.hidden ? 0.4 : 0;
+    });
+
+  linksGroup.selectAll('.link-reference')
+    .transition()
+    .duration(duration)
+    .attr('stroke-opacity', d => {
+      const sourceNode = typeof d.source === 'object' ? d.source : graphData.nodes.find(n => n.id === d.source);
+      const targetNode = typeof d.target === 'object' ? d.target : graphData.nodes.find(n => n.id === d.target);
+      const bothVisible = sourceNode && targetNode && !sourceNode.hidden && !targetNode.hidden;
+      return bothVisible ? 0.4 : 0;
+    });
+
+  // Gentle simulation restart
+  if (animate) {
+    simulation.alpha(0.1).restart();
+  }
+}
+
+// ============================================
+// Project Expansion (nested within Projects section)
+// ============================================
+
+function toggleProject(projectId, forceOpen = null) {
+  const block = document.querySelector(`.project-block[data-project="${projectId}"]`);
+  if (!block || block.classList.contains('project-block-simple')) return false;
+
+  const header = block.querySelector('.project-header');
+  const isCurrentlyOpen = block.classList.contains('active');
+  const shouldOpen = forceOpen !== null ? forceOpen : !isCurrentlyOpen;
+
+  // Close other projects (accordion behavior within projects)
+  document.querySelectorAll('.project-block.active').forEach(b => {
+    if (b !== block) {
+      b.classList.remove('active');
+      const h = b.querySelector('.project-header');
+      if (h) h.setAttribute('aria-expanded', 'false');
+    }
+  });
+
+  if (shouldOpen) {
+    block.classList.add('active');
+    if (header) header.setAttribute('aria-expanded', 'true');
+    activeProject = projectId;
+
+    // Show contribution nodes in graph
+    showProjectContributions(projectId);
+  } else {
+    block.classList.remove('active');
+    if (header) header.setAttribute('aria-expanded', 'false');
+    activeProject = null;
+
+    // Hide contribution nodes in graph
+    hideProjectContributions(projectId);
+  }
+
+  return shouldOpen;
+}
+
+function showProjectContributions(projectId) {
+  if (!graphData || !simulation) return;
+
+  // Find the parent project node to get its current position
+  const parentNode = graphData.nodes.find(n => n.id === `project-${projectId}`);
+  if (!parentNode) return;
+  
+  // If parent node is hidden, make sure it's visible first (ensure projects subgraph is open)
+  if (parentNode.hidden) {
+    parentNode.hidden = false;
+    nodesGroup.selectAll('.node-item')
+      .filter(d => d.id === parentNode.id)
+      .style('opacity', 1)
+      .style('pointer-events', 'auto');
+  }
+
+  const parentX = parentNode.x || 0;
+  const parentY = parentNode.y || 0;
+
+  // Show and release contribution nodes for this project
+  graphData.nodes.forEach(node => {
+    if (node.type === 'contribution' && node.parentProject === projectId) {
+      node.hidden = false;
+      // Position around parent and release from fixed position
+      const spread = 50;
+      const angle = Math.random() * Math.PI * 2;
+      const distance = 30 + Math.random() * spread;
+      node.x = parentX + Math.cos(angle) * distance;
+      node.y = parentY + Math.sin(angle) * distance;
+      node.fx = null;  // Release from fixed position
+      node.fy = null;
+    }
+  });
+
+  // Update visibility
+  nodesGroup.selectAll('.node-contribution')
+    .transition()
+    .duration(300)
+    .style('opacity', d => d.hidden ? 0 : 1)
+    .style('pointer-events', d => d.hidden ? 'none' : 'auto');
+
+  // Show contribution links
+  linksGroup.selectAll('.link-detail')
+    .transition()
+    .duration(300)
+    .attr('stroke-opacity', d => {
+      const targetNode = typeof d.target === 'object' ? d.target : graphData.nodes.find(n => n.id === d.target);
+      return targetNode && !targetNode.hidden ? 0.4 : 0;
+    });
+
+  simulation.alpha(0.12).restart();
+}
+
+function hideProjectContributions(projectId) {
+  if (!graphData || !simulation) return;
+
+  // Find the parent project node to snap contributions back to it
+  const parentNode = graphData.nodes.find(n => n.id === `project-${projectId}`);
+  const parentX = parentNode?.x || 0;
+  const parentY = parentNode?.y || 0;
+
+  // Hide and fix contribution nodes for this project
+  graphData.nodes.forEach(node => {
+    if (node.type === 'contribution' && node.parentProject === projectId) {
+      node.hidden = true;
+      // Fix position at parent location so they don't float
+      node.fx = parentX;
+      node.fy = parentY;
+    }
+  });
+
+  // Update visibility
+  nodesGroup.selectAll('.node-contribution')
+    .transition()
+    .duration(300)
+    .style('opacity', d => d.hidden ? 0 : 1)
+    .style('pointer-events', d => d.hidden ? 'none' : 'auto');
+
+  // Hide contribution links
+  linksGroup.selectAll('.link-detail')
+    .transition()
+    .duration(300)
+    .attr('stroke-opacity', d => {
+      const targetNode = typeof d.target === 'object' ? d.target : graphData.nodes.find(n => n.id === d.target);
+      return targetNode && !targetNode.hidden ? 0.4 : 0;
+    });
+
+  simulation.alpha(0.1).restart();
+}
+
+// ============================================
 // SVG Graph Setup
 // ============================================
 
@@ -784,21 +1052,64 @@ function initGraph() {
     const newWidth = container.offsetWidth;
     const newHeight = container.offsetHeight;
     svg.attr('width', newWidth).attr('height', newHeight);
-    
+
     // Update center force
     if (simulation) {
       simulation.force('center', d3.forceCenter(newWidth / 2, newHeight / 2)
         .strength(FORCE_PARAMS.centerStrength));
-      
+
       // Update center node position
       const centerNode = graphData.nodes.find(n => n.id === 'center');
       if (centerNode) {
         centerNode.fx = newWidth / 2;
         centerNode.fy = newHeight / 2;
       }
-      
-      simulation.alpha(0.3).restart();
+
+      simulation.alpha(0.15).restart();
     }
+  });
+
+  // Subtle magnetism effect - very gentle attraction to reduce shakiness
+  let cursorPos = { x: 0, y: 0 };
+  const MAGNET_RADIUS = 60;  // Distance at which magnetism kicks in (smaller)
+  const MAGNET_STRENGTH = 0.08;  // How strong the pull is (reduced for stability)
+
+  svg.on('mousemove', function(event) {
+    if (!graphData || !simulation) return;
+
+    // Get cursor position in graph coordinates
+    const [mx, my] = d3.pointer(event, g.node());
+    cursorPos = { x: mx, y: my };
+
+    // Check if cursor is near any non-fixed, visible node
+    let hasNearbyNode = false;
+    graphData.nodes.forEach(node => {
+      // Skip fixed nodes (center) and hidden nodes
+      if (node.fx !== undefined && node.fx !== null && node.id === 'center') return;
+      if (node.hidden) return;
+
+      const dx = cursorPos.x - node.x;
+      const dy = cursorPos.y - node.y;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+
+      if (dist < MAGNET_RADIUS && dist > 5) {
+        hasNearbyNode = true;
+        // Apply very gentle attraction toward cursor
+        const strength = MAGNET_STRENGTH * (1 - dist / MAGNET_RADIUS);
+        node.vx = (node.vx || 0) + dx * strength * 0.05;
+        node.vy = (node.vy || 0) + dy * strength * 0.05;
+      }
+    });
+
+    // Only restart if simulation has fully stopped (prevent constant jitter)
+    if (hasNearbyNode && simulation.alpha() < 0.05) {
+      simulation.alpha(0.05).restart();
+    }
+  });
+
+  // Stop magnetism when cursor leaves
+  svg.on('mouseleave', function() {
+    cursorPos = { x: -1000, y: -1000 };
   });
 }
 
@@ -827,14 +1138,16 @@ function renderGraph() {
         // Different distances for different link types
         if (d.type === 'spine') return FORCE_PARAMS.linkDistance * 0.8;
         if (d.type === 'branch') return FORCE_PARAMS.linkDistance * 0.6;
-        if (d.type === 'reference') return FORCE_PARAMS.linkDistance * 1.2; // Longer reference links
+        if (d.type === 'reference') return FORCE_PARAMS.linkDistance * 1.2;
+        if (d.type === 'detail') return FORCE_PARAMS.linkDistance * 0.4; // Short links for contributions
         return FORCE_PARAMS.linkDistance;
       })
       .strength(d => {
         // Stronger springs for spine connections
         if (d.type === 'spine') return FORCE_PARAMS.linkStrength;
         if (d.type === 'branch') return FORCE_PARAMS.linkStrength * 0.5;
-        if (d.type === 'reference') return FORCE_PARAMS.linkStrength * 0.3; // Weaker reference springs
+        if (d.type === 'reference') return FORCE_PARAMS.linkStrength * 0.3;
+        if (d.type === 'detail') return FORCE_PARAMS.linkStrength * 0.6; // Tighter contribution springs
         return FORCE_PARAMS.linkStrength;
       })
     )
@@ -854,6 +1167,8 @@ function renderGraph() {
       .strength(0.7)
     )
     .velocityDecay(FORCE_PARAMS.velocityDecay)
+    .alphaDecay(FORCE_PARAMS.alphaDecay)
+    .alphaMin(FORCE_PARAMS.alphaMin)
     .on('tick', ticked);
 
   // Render links as curved paths
@@ -880,6 +1195,7 @@ function renderGraph() {
     .attr('stroke-opacity', d => {
       if (d.type === 'branch') return 0; // Hidden until subgraph opens
       if (d.type === 'reference') return 0; // Hidden until both nodes visible
+      if (d.type === 'detail') return 0; // Hidden until project expanded
       return 0.4;
     });
 
@@ -892,7 +1208,8 @@ function renderGraph() {
     .attr('class', d => `node node-${d.type}${d.hidden ? ' node-hidden' : ''}`)
     .attr('data-id', d => d.id)
     .attr('transform', d => `translate(${d.x}, ${d.y})`)
-    .style('opacity', d => d.hidden ? 0 : 1);
+    .style('opacity', d => d.hidden ? 0 : 1)
+    .style('pointer-events', d => d.hidden ? 'none' : 'auto');
 
   // Add shapes to nodes
   nodeElements.each(function(d) {
@@ -912,7 +1229,7 @@ function renderGraph() {
   const drag = d3.drag()
     .clickDistance(4)
     .on('start', function(event, d) {
-      if (!event.active) simulation.alphaTarget(0.2).restart();
+      if (!event.active) simulation.alphaTarget(0.15).restart();
       d.fx = d.x;
       d.fy = d.y;
       // Track start position to detect actual drag
@@ -1003,8 +1320,8 @@ function renderGraph() {
         .attr('stroke-opacity', 0.8)
         .attr('stroke-width', 1.5);
       
-      // Highlight DOM item if it's an item node
-      if (d.type === 'item') {
+      // Highlight DOM item if it's an item or contribution node
+      if (d.type === 'item' || d.type === 'contribution') {
         highlightDomItem(d);
       }
 
@@ -1034,6 +1351,10 @@ function renderGraph() {
             const targetNode = typeof link.target === 'object' ? link.target : graphData.nodes.find(n => n.id === link.target);
             const bothVisible = sourceNode && targetNode && !sourceNode.hidden && !targetNode.hidden;
             return bothVisible ? 0.5 : 0;
+          }
+          if (link.type === 'detail') {
+            const targetNode = typeof link.target === 'object' ? link.target : graphData.nodes.find(n => n.id === link.target);
+            return targetNode && !targetNode.hidden ? 0.4 : 0;
           }
           return 0.4;
         })
@@ -1071,33 +1392,69 @@ function renderGraph() {
           }
         }, 450);
       } else if (d.type === 'item') {
-        // Expand sections and show cross-references
-        const el = domIndex.get(d.id);
-        
-        // Find all categories that contain nodes referenced by or referencing this node
-        const relatedCategories = getRelatedCategories(d);
-        
-        // Expand this node's category
-        toggleSection(d.category, true);
-        
-        // Expand all related categories to show cross-references
-        relatedCategories.forEach(catKey => {
-          toggleSection(catKey, true);
-        });
-        
-        // Show all related subgraphs
-        showMultipleSubgraphs([d.category, ...relatedCategories]);
-        
-        // Recenter graph to show all visible nodes (wait for nodes to appear)
-        setTimeout(() => {
-          zoomToVisibleNodes();
-        }, 450);
-        
-        // Scroll to the clicked item
-        if (el) {
+        // Check if this is a project item (expandable)
+        if (d.category === 'projects') {
+          const projectId = d.id.replace('project-', '');
+          toggleSection('projects', true);
+
+          // Only show subgraph if not already showing (don't toggle off!)
+          if (activeSubgraph !== 'projects') {
+            toggleSubgraph('projects');
+          }
+
+          // Expand the project to show contributions
           setTimeout(() => {
-            el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            toggleProject(projectId, true);
           }, 100);
+
+          setTimeout(() => {
+            zoomToVisibleNodes();
+          }, 450);
+        } else {
+          // Regular item behavior - expand sections and show cross-references
+          const el = domIndex.get(d.id);
+
+          // Find all categories that contain nodes referenced by or referencing this node
+          const relatedCategories = getRelatedCategories(d);
+
+          // Expand this node's category
+          toggleSection(d.category, true);
+
+          // Expand all related categories to show cross-references
+          relatedCategories.forEach(catKey => {
+            toggleSection(catKey, true);
+          });
+
+          // Show all related subgraphs
+          showMultipleSubgraphs([d.category, ...relatedCategories]);
+
+          // Recenter graph to show all visible nodes (wait for nodes to appear)
+          setTimeout(() => {
+            zoomToVisibleNodes();
+          }, 450);
+
+          // Scroll to the clicked item
+          if (el) {
+            setTimeout(() => {
+              el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }, 100);
+          }
+        }
+      } else if (d.type === 'contribution') {
+        // Clicking a contribution - open its PR link if it has one
+        const el = domIndex.get(d.id);
+        if (el && el.hasAttribute('href')) {
+          audioFeedback.playBye();
+          setTimeout(() => {
+            window.open(el.getAttribute('href'), '_blank', 'noopener,noreferrer');
+          }, 100);
+        } else if (el) {
+          // Fallback: scroll to it in the DOM
+          el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          el.style.background = 'color-mix(in srgb, var(--accent-opensource) 20%, transparent)';
+          setTimeout(() => {
+            el.style.background = '';
+          }, 1000);
         }
       } else if (d.type === 'center') {
         // Clicking center opens the about me section and shuffles the graph
@@ -1111,9 +1468,13 @@ function renderGraph() {
       }
     });
 
-  // Handle background clicks
+  // Handle background clicks - simplified to close everything on any background click
   svg.on('click', function(event) {
-    if (event.target.tagName === 'svg') {
+    // Check if we clicked on a node (has .node class in parent chain)
+    const clickedNode = event.target.closest('.node');
+    
+    // If we didn't click a node, treat as background click
+    if (!clickedNode) {
       // Close all subgraphs
       if (activeSubgraph) {
         activeSubgraph = null;
@@ -1121,6 +1482,23 @@ function renderGraph() {
         // Hide all item nodes
         graphData.nodes.forEach(node => {
           if (node.type === 'item') {
+            node.hidden = true;
+          }
+        });
+        
+        // Close any expanded projects
+        if (activeProject) {
+          activeProject = null;
+          document.querySelectorAll('.project-block.active').forEach(block => {
+            block.classList.remove('active');
+            const header = block.querySelector('.project-header');
+            if (header) header.setAttribute('aria-expanded', 'false');
+          });
+        }
+        
+        // Hide contribution nodes too
+        graphData.nodes.forEach(node => {
+          if (node.type === 'contribution') {
             node.hidden = true;
           }
         });
@@ -1133,14 +1511,22 @@ function renderGraph() {
           .style('opacity', 0)
           .style('pointer-events', 'none');
         
-        // Hide all branch and reference links
-        linksGroup.selectAll('.link-branch, .link-reference')
+        // Hide contribution nodes
+        nodesGroup.selectAll('.node-contribution')
+          .transition()
+          .duration(400)
+          .ease(d3.easeCubicOut)
+          .style('opacity', 0)
+          .style('pointer-events', 'none');
+        
+        // Hide all branch, reference, and detail links
+        linksGroup.selectAll('.link-branch, .link-reference, .link-detail')
           .transition()
           .duration(400)
           .ease(d3.easeCubicOut)
           .attr('stroke-opacity', 0);
         
-        simulation.alpha(0.15).restart();
+        simulation.alpha(0.08).restart();
         zoomToFit();
       }
       
@@ -1226,34 +1612,62 @@ function showMultipleSubgraphs(categoryKeys) {
     });
   
   // Restart simulation to settle the layout
-  simulation.alpha(0.3).restart();
+  simulation.alpha(0.12).restart();
 }
 
 function toggleSubgraph(categoryKey) {
   if (!graphData || !simulation) return;
-  
+
   // If clicking the same category, close it and zoom out
   if (activeSubgraph === categoryKey) {
     categoryKey = null;
   }
-  
-  // Use the new multi-subgraph function
+
   activeSubgraph = categoryKey;
-  
+
   // Animate item nodes and their links
   graphData.nodes.forEach(node => {
     if (node.type === 'item') {
       node.hidden = categoryKey ? node.category !== categoryKey : true;
     }
   });
-  
+
+  // Also hide ALL contribution nodes when subgraph changes
+  // (they should only appear when a specific project is expanded)
+  graphData.nodes.forEach(node => {
+    if (node.type === 'contribution') {
+      node.hidden = true;
+      // Find parent project to fix position
+      const parentNode = graphData.nodes.find(n => n.id === node.parentNodeId);
+      if (parentNode) {
+        node.fx = parentNode.x || 0;
+        node.fy = parentNode.y || 0;
+      }
+    }
+  });
+
+  // Close any expanded project in DOM
+  document.querySelectorAll('.project-block.active').forEach(block => {
+    block.classList.remove('active');
+    const header = block.querySelector('.project-header');
+    if (header) header.setAttribute('aria-expanded', 'false');
+  });
+  activeProject = null;
+
   // Update visibility of item nodes
   nodesGroup.selectAll('.node-item')
     .transition()
     .duration(300)
     .style('opacity', d => d.hidden ? 0 : 1)
     .style('pointer-events', d => d.hidden ? 'none' : 'auto');
-  
+
+  // Update visibility of contribution nodes
+  nodesGroup.selectAll('.node-contribution')
+    .transition()
+    .duration(300)
+    .style('opacity', 0)
+    .style('pointer-events', 'none');
+
   // Update visibility of branch links
   linksGroup.selectAll('.link-branch')
     .transition()
@@ -1262,7 +1676,13 @@ function toggleSubgraph(categoryKey) {
       const targetNode = typeof d.target === 'object' ? d.target : graphData.nodes.find(n => n.id === d.target);
       return targetNode && !targetNode.hidden ? 0.4 : 0;
     });
-  
+
+  // Hide all detail links (contribution links)
+  linksGroup.selectAll('.link-detail')
+    .transition()
+    .duration(300)
+    .attr('stroke-opacity', 0);
+
   // Update visibility of reference links (show when both nodes are visible)
   linksGroup.selectAll('.link-reference')
     .transition()
@@ -1273,10 +1693,10 @@ function toggleSubgraph(categoryKey) {
       const bothVisible = sourceNode && targetNode && !sourceNode.hidden && !targetNode.hidden;
       return bothVisible ? 0.4 : 0;
     });
-  
-  // Restart simulation to settle the layout
-  simulation.alpha(0.3).restart();
-  
+
+  // Restart simulation gently to settle the layout
+  simulation.alpha(0.12).restart();
+
   // Zoom into the subgraph or zoom out
   if (categoryKey) {
     zoomToCategory(categoryKey);
@@ -1448,8 +1868,8 @@ function reshuffleGraph() {
     }
   });
   
-  // Restart simulation with high energy to settle into new positions
-  simulation.alpha(0.8).restart();
+  // Restart simulation with moderate energy to settle into new positions smoothly
+  simulation.alpha(0.4).restart();
   
   // Zoom back to fit the whole graph
   setTimeout(() => {
@@ -1571,21 +1991,82 @@ document.head.appendChild(styleSheet);
 // ============================================
 
 function addSoundToElements() {
-  // Add sound to project cards
-  document.querySelectorAll('.project-card').forEach(card => {
-    card.addEventListener('mouseenter', () => {
-      audioFeedback.playCardHover();
-    });
-    card.addEventListener('click', (e) => {
-      // Check if it's an external link
-      if (card.hasAttribute('href') && card.getAttribute('target') === '_blank') {
-        e.preventDefault();
-        audioFeedback.playBye();
+  // Add sound and click handlers to project blocks (expandable projects)
+  document.querySelectorAll('.project-block:not(.project-block-simple)').forEach(block => {
+    const projectId = block.dataset.project;
+    if (!projectId) return;
+    
+    // Hover on header area
+    const header = block.querySelector('.project-header');
+    if (header && !header.classList.contains('project-header-static')) {
+      header.addEventListener('mouseenter', () => {
+        audioFeedback.playCardHover();
+      });
+    }
+    
+    // Click handler on entire block (but not on contribution items or links)
+    block.addEventListener('click', (e) => {
+      // Don't trigger if clicking on a contribution item or link
+      if (e.target.closest('.contribution-item') || e.target.closest('.project-github-link')) {
+        return;
+      }
+      
+      const willOpen = !block.classList.contains('active');
+      if (willOpen) {
+        audioFeedback.playExpand();
+        
+        // Ensure projects section is open
+        toggleSection('projects', true);
+        
+        // Ensure projects subgraph is visible in the graph
+        if (activeSubgraph !== 'projects') {
+          toggleSubgraph('projects');
+        }
+        
+        // Then toggle the project to show contributions
         setTimeout(() => {
-          window.open(card.getAttribute('href'), '_blank', 'noopener,noreferrer');
+          toggleProject(projectId, true);
+          
+          // Zoom to show all visible nodes including contributions
+          setTimeout(() => {
+            zoomToVisibleNodes();
+          }, 350);
         }, 100);
       } else {
-        audioFeedback.playClick();
+        audioFeedback.playCollapse();
+        toggleProject(projectId);
+      }
+    });
+  });
+
+  // Add sound to project GitHub links
+  document.querySelectorAll('.project-github-link').forEach(link => {
+    link.addEventListener('mouseenter', () => {
+      audioFeedback.playHover();
+    });
+    link.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      audioFeedback.playBye();
+      setTimeout(() => {
+        window.open(link.getAttribute('href'), '_blank', 'noopener,noreferrer');
+      }, 100);
+    });
+  });
+
+  // Add sound to contribution items (clickable PR links)
+  document.querySelectorAll('.contribution-item').forEach(item => {
+    item.addEventListener('mouseenter', () => {
+      audioFeedback.playHover();
+    });
+    item.addEventListener('click', (e) => {
+      if (item.hasAttribute('href')) {
+        e.preventDefault();
+        e.stopPropagation();
+        audioFeedback.playBye();
+        setTimeout(() => {
+          window.open(item.getAttribute('href'), '_blank', 'noopener,noreferrer');
+        }, 100);
       }
     });
   });

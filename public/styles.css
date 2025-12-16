@@ -553,35 +553,56 @@ html.cursor-enabled #cursor.is-down {
 }
 
 /* ============================================
-   Project Grid
+   Project List (Expandable Projects)
    ============================================ */
-.project-grid {
-  display: grid;
-  gap: var(--space-sm);
+.project-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
 }
 
-.project-card {
-  display: block;
+.project-block {
+  border: 1px dotted transparent;
+  transition: border-color var(--transition-base);
+}
+
+.project-block:not(.project-block-simple) {
+  cursor: pointer;
+}
+
+.project-block:not(.project-block-simple):hover {
+  border-color: var(--accent-opensource);
+}
+
+.project-block.active {
+  border-color: var(--accent-opensource);
+}
+
+/* Project Header (clickable) */
+.project-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  width: 100%;
   padding: var(--space-md);
   background: transparent;
-  border: 1px dotted transparent;
-  text-decoration: none;
+  border: none;
+  cursor: pointer;
+  text-align: left;
   transition: all var(--transition-base);
 }
 
-.project-card:hover {
-  border-color: var(--accent-opensource);
-  transform: translateY(-2px);
+.project-header-static {
+  cursor: default;
 }
 
-.project-card:active {
-  transform: translateY(-1px) scale(0.98);
+.project-header:hover:not(.project-header-static) {
+  background: color-mix(in srgb, var(--accent-opensource) 5%, transparent);
 }
 
 .project-icon {
   color: var(--accent-opensource);
-  display: block;
-  margin-bottom: var(--space-sm);
+  flex-shrink: 0;
   line-height: 1;
 }
 
@@ -594,29 +615,14 @@ html.cursor-enabled #cursor.is-down {
   font-size: 1.125rem;
   font-weight: 400;
   color: var(--text-primary);
-  margin-bottom: var(--space-xs);
-}
-
-.project-desc {
-  font-size: 0.875rem;
-  color: var(--text-secondary);
-  margin-bottom: var(--space-sm);
-  line-height: 1.6;
-}
-
-.project-link {
-  font-family: var(--font-mono);
-  font-size: 0.6875rem;
-  color: var(--accent-opensource);
-  letter-spacing: 0.05em;
-  font-variant-emoji: unicode;
+  margin: 0;
+  flex-grow: 1;
 }
 
 .project-meta {
   display: flex;
   flex-wrap: wrap;
   gap: var(--space-sm);
-  margin-bottom: var(--space-sm);
   font-family: var(--font-mono);
   font-size: 0.6875rem;
   letter-spacing: 0.05em;
@@ -642,8 +648,118 @@ html.cursor-enabled #cursor.is-down {
   color: var(--text-muted);
 }
 
-.project-type {
+.project-chevron {
   color: var(--text-muted);
+  flex-shrink: 0;
+  transition: transform var(--transition-base);
+}
+
+.project-block.active .project-chevron {
+  transform: rotate(180deg);
+}
+
+/* Project Content (expandable) */
+.project-content {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows var(--transition-slow);
+  overflow: hidden;
+}
+
+.project-block.active .project-content {
+  grid-template-rows: 1fr;
+}
+
+.project-inner {
+  min-height: 0;
+  overflow: hidden;
+  padding: 0 var(--space-md);
+  opacity: 0;
+  transform: translateY(-8px);
+  transition: opacity var(--transition-base), transform var(--transition-base), padding var(--transition-base);
+}
+
+.project-block.active .project-inner {
+  padding: 0 var(--space-md) var(--space-md);
+  opacity: 1;
+  transform: translateY(0);
+  transition-delay: 50ms;
+}
+
+/* Contribution Items (clickable links to PRs) */
+.contribution-item {
+  display: block;
+  padding: var(--space-xs) var(--space-xs);
+  border-bottom: 1px dotted var(--border-color);
+  text-decoration: none;
+  transition: all var(--transition-fast);
+  cursor: pointer;
+  cursor: pointer;
+}
+
+.contribution-item:last-of-type {
+  border-bottom: none;
+}
+
+.contribution-item:hover {
+  padding-left: var(--space-sm);
+  background: color-mix(in srgb, var(--accent-opensource) 8%, transparent);
+  border-color: var(--accent-opensource);
+}
+
+.contribution-item:hover .contrib-title {
+  color: var(--accent-opensource);
+}
+
+.contrib-title {
+  display: block;
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+  color: var(--text-primary);
+  margin-bottom: 2px;
+}
+
+.contrib-detail {
+  display: block;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+/* GitHub Link */
+.project-github-link {
+  display: inline-block;
+  margin-top: var(--space-sm);
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  color: var(--accent-opensource);
+  cursor: pointer;
+  letter-spacing: 0.05em;
+  text-decoration: none;
+  transition: opacity var(--transition-fast);
+}
+
+.project-github-link:hover {
+  opacity: 0.8;
+}
+
+/* Simple project (Vinture - no expansion) */
+.project-block-simple .project-header {
+  padding-bottom: var(--space-xs);
+}
+
+.project-tagline {
+  padding: 0 var(--space-md) var(--space-md);
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+.project-description {
+  padding: 0 var(--space-md) var(--space-md);
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  margin: 0;
+  line-height: 1.5;
 }
 
 /* ============================================

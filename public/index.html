@@ -72,8 +72,7 @@
                 <p class="work-role">Software Development Engineer II</p>
                 <span class="work-role-period">2023 —</span>
                 <p class="work-location">Palo Alto, CA</p>
-                <p class="work-description">Building the Future.</p>
-                <a href="https://amazon.jobs/content/en/teams/shopping" class="work-join-link" target="_blank" rel="noopener">Join me ↗</a>
+                <p class="work-description"><a href="https://amazon.jobs/content/en/teams/shopping" class="work-join-link" target="_blank" rel="noopener">Join me ↗</a></p>
               </div>
 
               <div class="work-item" data-graph-id="work-sde1" data-graph-label="SDE I" data-graph-subtitle="Amazon Search · 2022 - 2023">
@@ -88,7 +87,6 @@
                 <p class="work-role">Software Development Engineer Intern</p>
                 <span class="work-role-period">2021</span>
                 <p class="work-location">Seattle, WA</p>
-                <p class="work-description">Solving Cold Start.</p>
               </div>
               
             </div>
@@ -113,49 +111,100 @@
           <div class="section-content" id="projects-content">
             <div class="section-inner">
               <p class="section-subtitle">Building in the void</p>
-              
-              <div class="project-grid">
-                <a href="https://github.com/getkyo/kyo" class="project-card" target="_blank" rel="noopener" data-graph-id="project-kyo" data-graph-ref="kyo" data-graph-label="Kyo" data-graph-subtitle="Lead Maintainer · Active" data-graph-links-to="talk-algebraic-effects,talk-kyo-effects,talk-kyo-intro,talk-structured-concurrency">
-                  <span class="project-icon">
-                    <svg width="10" height="10" viewBox="0 0 12 12" fill="currentColor"><polygon points="6,0 12,11 0,11"/></svg>
-                  </span>
-                  <h3 class="project-name">Kyo</h3>
-                  <p class="project-desc">A novel functional effects system for Scala, focused on simplicity and performance.</p>
-                  <div class="project-meta">
-                    <span class="project-role">Lead Maintainer</span>
-                    <span class="project-status project-status-active">Active</span>
-                    <span class="project-type">Open Source</span>
+
+              <div class="project-list">
+                <!-- Kyo -->
+                <div class="project-block" data-project="kyo" data-graph-id="project-kyo" data-graph-label="Kyo" data-graph-subtitle="Lead Maintainer · Active" data-graph-links-to="talk-algebraic-effects,talk-kyo-effects,talk-kyo-intro,talk-structured-concurrency">
+                  <button class="project-header" aria-expanded="false">
+                    <span class="project-icon">
+                      <svg width="10" height="10" viewBox="0 0 12 12" fill="currentColor"><polygon points="6,0 12,11 0,11"/></svg>
+                    </span>
+                    <h3 class="project-name">Kyo</h3>
+                    <div class="project-meta">
+                      <span class="project-role">Lead Maintainer</span>
+                      <span class="project-status project-status-active">Active</span>
+                    </div>
+                    <span class="project-chevron">
+                      <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+                        <path d="M4 6L8 10L12 6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                      </svg>
+                    </span>
+                  </button>
+                  <p class="project-description">A novel functional effects system for Scala, focused on simplicity and performance.</p>
+                  <div class="project-content">
+                    <div class="project-inner">
+                      <a href="https://github.com/getkyo/kyo/pulls?q=author%3Ahearnadam+layer" class="contribution-item" target="_blank" rel="noopener" data-graph-id="contrib-kyo-layers" data-graph-label="Introduced Layers" data-graph-subtitle="World's first with algebraic effects">
+                        <span class="contrib-title">Introduced Layers</span>
+                        <span class="contrib-detail">World's first implementation of Layers with algebraic effects. Enables type-safe, composable dependency injection with compile-time verification and zero runtime overhead.</span>
+                      </a>
+                      <a href="https://github.com/getkyo/kyo/pulls?q=author%3Ahearnadam+zio" class="contribution-item" target="_blank" rel="noopener" data-graph-id="contrib-kyo-interop" data-graph-label="ZIO Interop" data-graph-subtitle="Effects, streams, testing">
+                        <span class="contrib-title">ZIO Interop</span>
+                        <span class="contrib-detail">Developed ZIO interop spanning effects, streams, and testing modules. Unlocks the entire ZIO ecosystem for use in Kyo applications.</span>
+                      </a>
+                      <a href="https://github.com/getkyo/kyo/pulls?q=author%3Ahearnadam" class="contribution-item" target="_blank" rel="noopener" data-graph-id="contrib-kyo-api" data-graph-label="API Design & Refinement" data-graph-subtitle="Production readiness">
+                        <span class="contrib-title">API Design & Refinement</span>
+                        <span class="contrib-detail">Shaped the library's core APIs and concurrency primitives to be intuitive, composable, and production-ready. Contributed to fundamental design decisions that defined the developer experience.</span>
+                      </a>
+                      <a href="https://github.com/getkyo/kyo/pulls?q=author%3Ahearnadam" class="project-github-link" target="_blank" rel="noopener">
+                        View all PRs ↗
+                      </a>
+                    </div>
                   </div>
-                  <span class="project-link">View on GitHub ↗</span>
-                </a>
-                
-                <a href="https://github.com/zio/zio" class="project-card" target="_blank" rel="noopener" data-graph-id="project-zio" data-graph-ref="zio" data-graph-label="ZIO" data-graph-subtitle="Core Maintainer · Active" data-graph-links-to="talk-structured-concurrency">
-                  <span class="project-icon">
-                    <svg width="10" height="10" viewBox="0 0 12 12" fill="currentColor"><polygon points="6,0 12,11 0,11"/></svg>
-                  </span>
-                  <h3 class="project-name">ZIO</h3>
-                  <p class="project-desc">Type-safe, composable asynchronous and concurrent programming for Scala.</p>
-                  <div class="project-meta">
-                    <span class="project-role">Core Maintainer</span>
-                    <span class="project-status project-status-active">Active</span>
-                    <span class="project-type">Open Source</span>
+                </div>
+
+                <!-- ZIO -->
+                <div class="project-block" data-project="zio" data-graph-id="project-zio" data-graph-label="ZIO" data-graph-subtitle="Core Maintainer · Active" data-graph-links-to="talk-structured-concurrency">
+                  <button class="project-header" aria-expanded="false">
+                    <span class="project-icon">
+                      <svg width="10" height="10" viewBox="0 0 12 12" fill="currentColor"><polygon points="6,0 12,11 0,11"/></svg>
+                    </span>
+                    <h3 class="project-name">ZIO</h3>
+                    <div class="project-meta">
+                      <span class="project-role">Core Maintainer</span>
+                      <span class="project-status project-status-active">Active</span>
+                    </div>
+                    <span class="project-chevron">
+                      <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+                        <path d="M4 6L8 10L12 6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                      </svg>
+                    </span>
+                  </button>
+                  <p class="project-description">Type-safe, composable asynchronous and concurrent programming for Scala.</p>
+                  <div class="project-content">
+                    <div class="project-inner">
+                      <a href="https://github.com/zio/zio/pull/9569" class="contribution-item" target="_blank" rel="noopener" data-graph-id="contrib-zio-promise-opt" data-graph-label="Optimize Promise" data-graph-subtitle="PR #9569">
+                        <span class="contrib-title">Optimize Promise</span>
+                        <span class="contrib-detail">Redesigned internal state to minimize allocations, fields, and iteration cost.</span>
+                      </a>
+                      <a href="https://github.com/zio/zio/pull/9500" class="contribution-item" target="_blank" rel="noopener" data-graph-id="contrib-zio-ref-atomic" data-graph-label="Optimize Ref.Atomic" data-graph-subtitle="PR #9500">
+                        <span class="contrib-title">Optimize Ref.Atomic</span>
+                        <span class="contrib-detail">Reduced contention and improved concurrent access patterns.</span>
+                      </a>
+                      <a href="https://github.com/zio/zio/pull/10140" class="contribution-item" target="_blank" rel="noopener" data-graph-id="contrib-zio-isfatal" data-graph-label="Remove Configurability of Fatal Exceptions" data-graph-subtitle="PR #10140 & #10212">
+                        <span class="contrib-title">Remove Configurability of Fatal Exceptions</span>
+                        <span class="contrib-detail">ZIO included an unused feature allowing custom fatal exception definitions. This mechanism added significant overhead to the Fiber runtime. Deprecated and removed the feature after notifying consumers.</span>
+                      </a>
+                      <a href="https://github.com/zio/zio/pulls?q=author%3Ahearnadam" class="project-github-link" target="_blank" rel="noopener">
+                        View all PRs ↗
+                      </a>
+                    </div>
                   </div>
-                  <span class="project-link">View on GitHub ↗</span>
-                </a>
-                
-                <a href="#" class="project-card" target="_blank" rel="noopener" data-graph-id="project-vinture" data-graph-ref="vinture" data-graph-label="Vinture" data-graph-subtitle="Co-founder · Sunset">
-                  <span class="project-icon">
-                    <svg width="10" height="10" viewBox="0 0 12 12" fill="currentColor"><polygon points="6,0 12,11 0,11"/></svg>
-                  </span>
-                  <h3 class="project-name">Vinture</h3>
-                  <p class="project-desc">Building the future of wine.</p>
-                  <div class="project-meta">
-                    <span class="project-role">Co-founder</span>
-                    <span class="project-status project-status-sunset">Sunset</span>
-                    <span class="project-type">Startup</span>
+                </div>
+
+                <!-- Vinture -->
+                <div class="project-block project-block-simple" data-project="vinture" data-graph-id="project-vinture" data-graph-label="Vinture" data-graph-subtitle="Co-founder · Sunset">
+                  <div class="project-header project-header-static">
+                    <span class="project-icon">
+                      <svg width="10" height="10" viewBox="0 0 12 12" fill="currentColor"><polygon points="6,0 12,11 0,11"/></svg>
+                    </span>
+                    <h3 class="project-name">Vinture</h3>
+                    <div class="project-meta">
+                      <span class="project-role">Co-founder</span>
+                      <span class="project-status project-status-sunset">Sunset</span>
+                    </div>
                   </div>
-                  <!-- <span class="project-link">Learn more ↗</span> -->
-                </a>
+                  <p class="project-tagline">Building the future of wine.</p>
+                </div>
               </div>
             </div>
           </div>
