@@ -292,14 +292,14 @@ html.cursor-enabled #cursor.is-down {
 }
 
 .intro-text {
-  font-size: 1.5rem;
-  line-height: 1.5;
+  font-size: 1.125rem;
+  line-height: 1.6;
   color: var(--text-primary);
   margin-bottom: var(--space-md);
 }
 
 .intro-text.secondary {
-  font-size: 1rem;
+  font-size: 0.875rem;
   color: var(--text-muted);
   font-style: italic;
 }
@@ -457,12 +457,14 @@ html.cursor-enabled #cursor.is-down {
    Work Items
    ============================================ */
 .work-item {
-  margin-bottom: var(--space-lg);
+  margin-bottom: var(--space-md);
   padding: var(--space-md);
+  border: 1px dotted transparent;
   transition: all var(--transition-base);
 }
 
 .work-item:hover {
+  border-color: var(--accent-work);
   transform: translateX(2px);
 }
 
@@ -471,10 +473,12 @@ html.cursor-enabled #cursor.is-down {
 }
 
 .work-company {
-  font-family: var(--font-serif);
-  font-size: 1.5rem;
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
   font-weight: 400;
-  color: var(--text-primary);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-muted);
   margin-bottom: var(--space-xs);
 }
 
@@ -488,7 +492,8 @@ html.cursor-enabled #cursor.is-down {
 }
 
 .work-role {
-  font-size: 1rem;
+  font-family: var(--font-serif);
+  font-size: 1.125rem;
   font-weight: 400;
   color: var(--text-primary);
   margin-bottom: var(--space-xs);
@@ -693,7 +698,7 @@ html.cursor-enabled #cursor.is-down {
 }
 
 .talk-abstract {
-  font-size: 0.9375rem;
+  font-size: 0.875rem;
   color: var(--text-secondary);
   line-height: 1.6;
   margin-bottom: var(--space-sm);
@@ -756,7 +761,7 @@ html.cursor-enabled #cursor.is-down {
 
 .contact-value {
   font-family: var(--font-serif);
-  font-size: 0.9375rem;
+  font-size: 0.875rem;
   color: var(--text-secondary);
   transition: color var(--transition-fast);
   font-variant-emoji: unicode;
@@ -792,7 +797,7 @@ html.cursor-enabled #cursor.is-down {
   }
   
   .intro-text {
-    font-size: 1.25rem;
+    font-size: 1rem;
   }
   
   .section-inner {

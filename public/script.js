@@ -1,5 +1,5 @@
 // ============================================
-// Sound & Haptic Feedback System
+// Sound Feedback System
 // ============================================
 
 class AudioFeedback {
@@ -317,38 +317,7 @@ class AudioFeedback {
   }
 }
 
-class HapticFeedback {
-  constructor() {
-    this.enabled = 'vibrate' in navigator;
-  }
-
-  light() {
-    if (this.enabled) {
-      navigator.vibrate(10); // 10ms light tap
-    }
-  }
-
-  medium() {
-    if (this.enabled) {
-      navigator.vibrate(20); // 20ms medium tap
-    }
-  }
-
-  strong() {
-    if (this.enabled) {
-      navigator.vibrate(30); // 30ms strong tap
-    }
-  }
-
-  pattern(pattern) {
-    if (this.enabled) {
-      navigator.vibrate(pattern); // Custom pattern [vibrate, pause, vibrate...]
-    }
-  }
-}
-
 const audioFeedback = new AudioFeedback();
-const hapticFeedback = new HapticFeedback();
 
 // ============================================
 // Graph Configuration
@@ -727,17 +696,14 @@ sectionBlocks.forEach(block => {
   // Add sound on hover
   header.addEventListener('mouseenter', () => {
     audioFeedback.playHover();
-    hapticFeedback.light();
   });
-  
+
   header.addEventListener('click', () => {
     const willOpen = !block.classList.contains('active');
     if (willOpen) {
       audioFeedback.playExpand();
-      hapticFeedback.medium();
     } else {
       audioFeedback.playCollapse();
-      hapticFeedback.light();
     }
     toggleSection(sectionId);
   });
@@ -1013,8 +979,7 @@ function renderGraph() {
       } else {
         audioFeedback.playHover();
       }
-      hapticFeedback.light();
-      
+
       // Scale up node on hover
       d3.select(this).select('g')
         .transition()
@@ -1091,8 +1056,7 @@ function renderGraph() {
       
       // Play click sound
       audioFeedback.playClick();
-      hapticFeedback.medium();
-      
+
       if (d.type === 'category') {
         const catKey = d.id.replace('cat-', '');
         toggleSubgraph(catKey);
@@ -1611,20 +1575,17 @@ function addSoundToElements() {
   document.querySelectorAll('.project-card').forEach(card => {
     card.addEventListener('mouseenter', () => {
       audioFeedback.playCardHover();
-      hapticFeedback.light();
     });
     card.addEventListener('click', (e) => {
       // Check if it's an external link
       if (card.hasAttribute('href') && card.getAttribute('target') === '_blank') {
         e.preventDefault();
         audioFeedback.playBye();
-        hapticFeedback.pattern([10, 30, 10]); // Short-long-short pattern
         setTimeout(() => {
           window.open(card.getAttribute('href'), '_blank', 'noopener,noreferrer');
         }, 100);
       } else {
         audioFeedback.playClick();
-        hapticFeedback.light();
       }
     });
   });
@@ -1633,20 +1594,17 @@ function addSoundToElements() {
   document.querySelectorAll('.talk-item').forEach(item => {
     item.addEventListener('mouseenter', () => {
       audioFeedback.playCardHover();
-      hapticFeedback.light();
     });
     item.addEventListener('click', (e) => {
       // Check if it's an external link
       if (item.hasAttribute('href') && item.getAttribute('target') === '_blank') {
         e.preventDefault();
         audioFeedback.playBye();
-        hapticFeedback.pattern([10, 30, 10]);
         setTimeout(() => {
           window.open(item.getAttribute('href'), '_blank', 'noopener,noreferrer');
         }, 100);
       } else {
         audioFeedback.playClick();
-        hapticFeedback.light();
       }
     });
   });
@@ -1655,20 +1613,17 @@ function addSoundToElements() {
   document.querySelectorAll('.contact-item').forEach(item => {
     item.addEventListener('mouseenter', () => {
       audioFeedback.playCardHover();
-      hapticFeedback.light();
     });
     item.addEventListener('click', (e) => {
       // Check if it's an external link
       if (item.hasAttribute('href') && item.getAttribute('target') === '_blank') {
         e.preventDefault();
         audioFeedback.playBye();
-        hapticFeedback.pattern([10, 30, 10]);
         setTimeout(() => {
           window.open(item.getAttribute('href'), '_blank', 'noopener,noreferrer');
         }, 100);
       } else {
         audioFeedback.playClick();
-        hapticFeedback.light();
       }
     });
   });
@@ -1677,7 +1632,6 @@ function addSoundToElements() {
   document.querySelectorAll('.work-item').forEach(item => {
     item.addEventListener('mouseenter', () => {
       audioFeedback.playHover();
-      hapticFeedback.light();
     });
   });
 
@@ -1685,20 +1639,17 @@ function addSoundToElements() {
   document.querySelectorAll('.work-join-link').forEach(link => {
     link.addEventListener('mouseenter', () => {
       audioFeedback.playCardHover();
-      hapticFeedback.light();
     });
     link.addEventListener('click', (e) => {
       // This is an external link
       if (link.hasAttribute('href') && link.getAttribute('target') === '_blank') {
         e.preventDefault();
         audioFeedback.playBye();
-        hapticFeedback.pattern([10, 30, 10]);
         setTimeout(() => {
           window.open(link.getAttribute('href'), '_blank', 'noopener,noreferrer');
         }, 100);
       } else {
         audioFeedback.playClick();
-        hapticFeedback.light();
       }
     });
   });
@@ -2073,17 +2024,15 @@ document.addEventListener('DOMContentLoaded', () => {
       if (!audioFeedback.isMuted()) {
         audioFeedback.playHover();
       }
-      hapticFeedback.light();
     });
     muteToggle.addEventListener('click', () => {
       const nowMuted = audioFeedback.toggleMute();
       updateMuteButton(nowMuted);
-      
+
       // Play a sound when unmuting (to confirm it works)
       if (!nowMuted) {
         audioFeedback.playClick();
       }
-      hapticFeedback.medium();
     });
   }
 });
@@ -2094,11 +2043,9 @@ document.addEventListener('DOMContentLoaded', () => {
   if (toggle) {
     toggle.addEventListener('mouseenter', () => {
       audioFeedback.playHover();
-      hapticFeedback.light();
     });
     toggle.addEventListener('click', () => {
       audioFeedback.playClick();
-      hapticFeedback.medium();
       const currentTheme = document.documentElement.getAttribute('data-theme') || 'dark';
       const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
       setTheme(newTheme);
